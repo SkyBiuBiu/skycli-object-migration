@@ -30,7 +30,9 @@ class SkyClient:
             region_name=self.region,
             signature_version="s3v4",
             s3={"addressing_style": "path" if self.use_path_style else "auto"},
-            retries={"max_attempts": 3, "mode": "standard"}
+            retries={"max_attempts": 3, "mode": "standard"},
+            connect_timeout=5,
+            read_timeout=10
         )
 
         return boto3.client(
@@ -47,7 +49,9 @@ class SkyClient:
         config = Config(
             region_name=self.region,
             signature_version="s3v4",
-            s3={"addressing_style": "path" if self.use_path_style else "auto"}
+            s3={"addressing_style": "path" if self.use_path_style else "auto"},
+            connect_timeout=5,
+            read_timeout=10
         )
 
         return boto3.resource(
@@ -73,6 +77,16 @@ class SkyClient:
             return {
                 "success": False,
                 "error": str(e)
+            }
+        except botocore.exceptions.ConnectionError as e:
+            return {
+                "success": False,
+                "error": f"Connection failed: {str(e)}"
+            }
+        except Exception as e:
+            return {
+                "success": False,
+                "error": f"Unexpected error: {str(e)}"
             }
 
     def list_buckets(self) -> List[Dict]:

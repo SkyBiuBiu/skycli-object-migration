@@ -1,7 +1,19 @@
 import os
 import yaml
+import threading
 from pathlib import Path
 from typing import Optional, Dict, List
+from watchdog.observers import Observer
+from watchdog.events import FileSystemEventHandler
+
+
+class ConfigFileHandler(FileSystemEventHandler):
+    def __init__(self, config_instance):
+        self.config_instance = config_instance
+
+    def on_modified(self, event):
+        if event.src_path == str(self.config_instance.config_file):
+            self.config_instance._load_config()
 
 
 class SkyConfig:
@@ -13,30 +25,53 @@ class SkyConfig:
         self.config_file = self.DEFAULT_CONFIG_FILE
         self.profiles: Dict[str, Dict] = {}
         self.default_profile: Optional[str] = None
+        self._config_lock = threading.RLock()
+        self._observer = None
         self._ensure_config_dir()
+        self._load_config()
+        self._start_watching()
 
     def _ensure_config_dir(self):
         if not self.config_dir.exists():
             self.config_dir.mkdir(parents=True, exist_ok=True)
 
+    def _start_watching(self):
+        try:
+            event_handler = ConfigFileHandler(self)
+            self._observer = Observer()
+            self._observer.schedule(event_handler, str(self.config_dir), recursive=False)
+            self._observer.start()
+        except Exception:
+            pass
+
+    def _stop_watching(self):
+        if self._observer:
+            self._observer.stop()
+            self._observer.join()
+
     def _load_config(self):
-        if not self.config_file.exists():
-            return
+        with self._config_lock:
+            if not self.config_file.exists():
+                return
 
-        with open(self.config_file, "r", encoding="utf-8") as f:
-            config = yaml.safe_load(f) or {}
+            try:
+                with open(self.config_file, "r", encoding="utf-8") as f:
+                    config = yaml.safe_load(f) or {}
 
-        self.profiles = config.get("profiles", {})
-        self.default_profile = config.get("default")
+                self.profiles = config.get("profiles", {})
+                self.default_profile = config.get("default")
+            except Exception:
+                pass
 
     def _save_config(self):
-        config = {
-            "profiles": self.profiles,
-            "default": self.default_profile
-        }
+        with self._config_lock:
+            config = {
+                "profiles": self.profiles,
+                "default": self.default_profile
+            }
 
-        with open(self.config_file, "w", encoding="utf-8") as f:
-            yaml.dump(config, f, default_flow_style=False, allow_unicode=True)
+            with open(self.config_file, "w", encoding="utf-8") as f:
+                yaml.dump(config, f, default_flow_style=False, allow_unicode=True)
 
     def add_profile(
         self,
@@ -49,55 +84,120 @@ class SkyConfig:
         verify_ssl: bool = True,
         profile: Optional[str] = None
     ):
-        profile_key = profile or "default"
+        if not endpoint.startswith(("http://", "https://")):
+            raise ValueError("Endpoint must start with http:// or https://")
+        
+        endpoint = endpoint.rstrip("/")
+        
+        with self._config_lock:
+            profile_key = profile or "default"
 
-        if profile_key not in self.profiles:
-            self.profiles[profile_key] = {}
+            if profile_key not in self.profiles:
+                self.profiles[profile_key] = {}
 
-        self.profiles[profile_key][name] = {
-            "endpoint": endpoint,
-            "access_key": access_key,
-            "secret_key": secret_key,
-            "region": region,
-            "use_path_style": use_path_style,
-            "verify_ssl": verify_ssl
-        }
+            self.profiles[profile_key][name] = {
+                "endpoint": endpoint,
+                "access_key": access_key,
+                "secret_key": secret_key,
+                "region": region,
+                "use_path_style": use_path_style,
+                "verify_ssl": verify_ssl
+            }
 
-        if self.default_profile is None:
-            self.default_profile = profile_key
+            if self.default_profile is None:
+                self.default_profile = profile_key
 
-        self._save_config()
+            self._save_config()
 
-    def get_profile(self, name: str, profile: Optional[str] = None) -> Optional[Dict]:
-        self._load_config()
-        profile_key = profile or self.default_profile or "default"
-        return self.profiles.get(profile_key, {}).get(name)
+    def get_profile(self, name: str, profile: Optional[str] = None, reload: bool = True) -> Optional[Dict]:
+        if reload:
+            self._load_config()
+        
+        with self._config_lock:
+            profile_key = profile or self.default_profile or "default"
+            return self.profiles.get(profile_key, {}).get(name)
 
-    def list_profiles(self, profile: Optional[str] = None) -> List[Dict]:
-        self._load_config()
-        profile_key = profile or self.default_profile or "default"
-        profiles_data = self.profiles.get(profile_key, {})
-        return [
-            {"name": name, **config}
-            for name, config in profiles_data.items()
-        ]
+    def list_profiles(self, profile: Optional[str] = None, reload: bool = True) -> List[Dict]:
+        if reload:
+            self._load_config()
+        
+        with self._config_lock:
+            profile_key = profile or self.default_profile or "default"
+            profiles_data = self.profiles.get(profile_key, {})
+            return [
+                {"name": name, **config}
+                for name, config in profiles_data.items()
+            ]
 
-    def rm_profile(self, name: str, profile: Optional[str] = None):
-        self._load_config()
-        profile_key = profile or self.default_profile or "default"
+    def rm_profile(self, name: str, profile: Optional[str] = None) -> bool:
+        with self._config_lock:
+            self._load_config()
+            profile_key = profile or self.default_profile or "default"
 
-        if profile_key in self.profiles and name in self.profiles[profile_key]:
-            del self.profiles[profile_key][name]
+            if profile_key in self.profiles and name in self.profiles[profile_key]:
+                del self.profiles[profile_key][name]
+                self._save_config()
+                return True
+            return False
+
+    def update_profile(
+        self,
+        name: str,
+        endpoint: Optional[str] = None,
+        access_key: Optional[str] = None,
+        secret_key: Optional[str] = None,
+        region: Optional[str] = None,
+        use_path_style: Optional[bool] = None,
+        verify_ssl: Optional[bool] = None,
+        profile: Optional[str] = None
+    ) -> bool:
+        with self._config_lock:
+            self._load_config()
+            profile_key = profile or self.default_profile or "default"
+
+            if profile_key not in self.profiles or name not in self.profiles[profile_key]:
+                return False
+
+            if endpoint is not None:
+                if not endpoint.startswith(("http://", "https://")):
+                    raise ValueError("Endpoint must start with http:// or https://")
+                self.profiles[profile_key][name]["endpoint"] = endpoint.rstrip("/")
+            
+            if access_key is not None:
+                self.profiles[profile_key][name]["access_key"] = access_key
+            
+            if secret_key is not None:
+                self.profiles[profile_key][name]["secret_key"] = secret_key
+            
+            if region is not None:
+                self.profiles[profile_key][name]["region"] = region
+            
+            if use_path_style is not None:
+                self.profiles[profile_key][name]["use_path_style"] = use_path_style
+            
+            if verify_ssl is not None:
+                self.profiles[profile_key][name]["verify_ssl"] = verify_ssl
+
             self._save_config()
             return True
-        return False
+
+    def set_default_profile(self, profile: str) -> bool:
+        with self._config_lock:
+            self._load_config()
+            
+            if profile not in self.profiles:
+                return False
+            
+            self.default_profile = profile
+            self._save_config()
+            return True
 
     def test_connection(self, name: str, profile: Optional[str] = None) -> Dict:
-        from .skyclient import SkyClient
-
         config = self.get_profile(name, profile)
         if not config:
             return {"success": False, "error": "Profile not found"}
+
+        from .skyclient import SkyClient
 
         client = SkyClient(
             endpoint=config["endpoint"],
@@ -131,6 +231,12 @@ class SkyConfig:
             profile=profile,
             **config_data
         )
+
+    def clear_all(self):
+        with self._config_lock:
+            self.profiles = {}
+            self.default_profile = None
+            self._save_config()
 
 
 config = SkyConfig()

@@ -10,6 +10,7 @@ setup(
         "boto3>=1.26.0",
         "PyYAML>=6.0",
         "python-dateutil>=2.8.0",
+        "watchdog>=3.0.0",
     ],
     extras_require={
         "test": [

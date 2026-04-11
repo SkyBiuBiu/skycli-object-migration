@@ -7,8 +7,7 @@ from .skyconfig import config
 from .skyclient import SkyClient
 from .skymetadata import SkyMetadata
 from .skyacl import SkyACL
-from .skymigrate import create_migration, get_migration, get_migration_history
-from .skysync import create_sync, get_sync_history
+from .skysync import create_sync, get_sync, get_sync_history
 from .skyvalidate import create_validation, get_validation_report, list_validation_reports
 from .skyreport import ReportGenerator
 
@@ -42,15 +41,63 @@ def cmd_config_add(args):
 
 
 def cmd_config_list(args):
+    from concurrent.futures import ThreadPoolExecutor, as_completed
+    import sys
+    import time
+    
     profiles = config.list_profiles(args.profile)
     if not profiles:
         print("No configs found")
         return
 
+    if not args.test_all:
+        print(f"{'NAME':<20} {'ENDPOINT':<40} {'REGION':<15}")
+        print("-" * 75)
+        for p in sorted(profiles, key=lambda x: x["name"]):
+            print(f"{p['name']:<20} {p['endpoint']:<40} {p.get('region', '-'):<15}")
+        print(f"\nTip: Use --test-all to test connection status")
+        return
+
     print(f"{'NAME':<20} {'ENDPOINT':<40} {'REGION':<15} STATUS")
     print("-" * 80)
-    for p in profiles:
-        print(f"{p['name']:<20} {p['endpoint']:<40} {p.get('region', '-'):<15} {'✓' if config.test_connection(p['name'], args.profile).get('success') else '✗'}")
+    
+    results = []
+    completed = 0
+    total = len(profiles)
+    
+    def test_single_config(cfg):
+        try:
+            result = config.test_connection(cfg["name"], args.profile)
+            return cfg["name"], cfg["endpoint"], cfg.get("region", "-"), result.get("success", False), result.get("error", "")
+        except Exception as e:
+            return cfg["name"], cfg["endpoint"], cfg.get("region", "-"), False, str(e)
+    
+    with ThreadPoolExecutor(max_workers=5) as executor:
+        futures = [executor.submit(test_single_config, p) for p in profiles]
+        
+        for future in as_completed(futures):
+            completed += 1
+            sys.stdout.write(f"\rTesting connections: {completed}/{total}...")
+            sys.stdout.flush()
+            
+            try:
+                results.append(future.result(timeout=10))
+            except Exception as e:
+                results.append(("unknown", "unknown", "-", False, str(e)))
+    
+    sys.stdout.write("\r" + " " * 50 + "\r")
+    sys.stdout.flush()
+    
+    for name, endpoint, region, success, error in sorted(results):
+        if success:
+            status = '✓ 成功'
+        elif error and "Connection" in error:
+            status = '✗ 连接失败'
+        elif error:
+            status = f'✗ 错误'
+        else:
+            status = '✗ 失败'
+        print(f"{name:<20} {endpoint:<40} {region:<15} {status}")
 
 
 def cmd_config_test(args):
@@ -320,49 +367,112 @@ def cmd_migrate_run(args):
     print(ReportGenerator.generate_migration_report(result, args.output))
 
 
-def cmd_migrate_preview(args):
-    client = get_client(args.source, args.profile)
-    objects = list(client.list_objects_all(args.source_bucket, args.source_prefix or ""))
-
-    print(ReportGenerator.generate_migration_preview(
-        objects,
-        args.source_bucket,
-        args.target_bucket,
-        args.source_prefix or "",
-        args.output
-    ))
-
-
 def cmd_migrate_list(args):
-    history = get_migration_history()
+    history = get_sync_history()
     if not history:
-        print("No migration history found")
+        print("No sync history found")
         return
 
     for m in history[:args.limit]:
-        print(f"{m.get('migration_id')}: {m.get('status')} - {m.get('source_bucket')} -> {m.get('target_bucket')}")
+        print(f"{m.get('sync_id')}: {m.get('status')} - {m.get('source_bucket')} -> {m.get('target_bucket')}")
 
 
 def cmd_migrate_status(args):
-    migration = get_migration(args.migration_id)
-    if not migration:
-        print(f"Migration '{args.migration_id}' not found")
+    sync = get_sync(args.migration_id)
+    if not sync:
+        print(f"Sync '{args.migration_id}' not found")
         sys.exit(1)
 
     import json
-    print(json.dumps(migration, indent=2))
+    print(json.dumps(sync, indent=2))
 
 
 def cmd_sync_run(args):
     from datetime import datetime
+    from .skysync import create_sync
 
     since = None
     if args.since:
         since = datetime.fromisoformat(args.since.replace("Z", "+00:00"))
 
-    print(f"Starting sync...")
+    mode = "sync" if (since or args.since_last_sync or args.delete) else "migration"
 
-    sync = create_sync(
+    if args.dry_run:
+        source_client = get_client(args.source, args.profile)
+        target_client = get_client(args.target, args.profile)
+
+        source_objects = list(source_client.list_objects_all(args.source_bucket, args.source_prefix or ""))
+        target_objects = {}
+        for obj in target_client.list_objects_all(args.target_bucket, args.target_prefix or ""):
+            key_without_prefix = obj["Key"][len(args.target_prefix or ""):] if args.target_prefix else obj["Key"]
+            target_objects[key_without_prefix] = obj
+
+        print(f"Dry run - {mode} simulation")
+        print(f"Source: {args.source}/{args.source_bucket}/{args.source_prefix or ''}")
+        print(f"Target: {args.target}/{args.target_bucket}/{args.target_prefix or ''}")
+        print()
+
+        will_upload = []
+        will_delete = []
+        will_skip = []
+
+        for obj in source_objects:
+            source_key = obj["Key"]
+            key_without_prefix = source_key[len(args.source_prefix or ""):] if args.source_prefix else source_key
+            target_key = (args.target_prefix or "") + key_without_prefix
+
+            if key_without_prefix not in target_objects:
+                will_upload.append(source_key)
+            else:
+                source_etag = obj.get("ETag", "").strip('"')
+                target_obj = target_objects[key_without_prefix]
+                target_etag = target_obj.get("ETag", "").strip('"')
+
+                if source_etag != target_etag or obj.get("Size", 0) != target_obj.get("Size", 0):
+                    will_upload.append(source_key)
+                else:
+                    will_skip.append(source_key)
+
+        if args.delete:
+            for target_key, target_obj in target_objects.items():
+                if target_key not in [obj["Key"][len(args.source_prefix or ""):] for obj in source_objects]:
+                    will_delete.append(target_obj["Key"])
+
+        print(f"Objects to upload: {len(will_upload)}")
+        print(f"Objects to delete: {len(will_delete)}")
+        print(f"Objects to skip: {len(will_skip)}")
+        print()
+
+        if will_upload:
+            print("--- Upload list (first 10) ---")
+            for key in will_upload[:10]:
+                print(f"  [UPLOAD] {key}")
+            if len(will_upload) > 10:
+                print(f"  ... and {len(will_upload) - 10} more")
+            print()
+
+        if will_delete:
+            print("--- Delete list (first 10) ---")
+            for key in will_delete[:10]:
+                print(f"  [DELETE] {key}")
+            if len(will_delete) > 10:
+                print(f"  ... and {len(will_delete) - 10} more")
+            print()
+
+        if will_skip:
+            print("--- Skip list (first 10) ---")
+            for key in will_skip[:10]:
+                print(f"  [SKIP] {key}")
+            if len(will_skip) > 10:
+                print(f"  ... and {len(will_skip) - 10} more")
+            print()
+
+        print("Dry run completed. No changes were made.")
+        return
+
+    print(f"Starting {mode}...")
+
+    sync_task = create_sync(
         source_config_name=args.source,
         source_bucket=args.source_bucket,
         target_config_name=args.target,
@@ -373,18 +483,23 @@ def cmd_sync_run(args):
         since_last_sync=args.since_last_sync,
         delete=args.delete,
         threads=args.threads,
+        part_size=args.part_size,
+        storage_class=args.storage_class,
         preserve_metadata=args.preserve_metadata,
         preserve_acl=args.preserve_acl,
+        exclude_patterns=args.exclude,
+        include_patterns=args.include,
         profile=args.profile
     )
 
     def progress_callback(progress):
-        print(f"\rProgress: uploaded={progress['uploaded']}, deleted={progress['deleted']}, skipped={progress['skipped']}, failed={progress['failed']}", end="", flush=True)
+        pct = (progress["processed"] / progress["total"]) * 100 if progress["total"] > 0 else 0
+        print(f"\rProgress: {progress['processed']}/{progress['total']} ({pct:.1f}%) Uploaded: {progress['uploaded']}, Deleted: {progress['deleted']}, Skipped: {progress['skipped']}, Failed: {progress['failed']}", end="", flush=True)
 
-    result = sync.run(progress_callback if not args.quiet else None)
+    result = sync_task.run(progress_callback if not args.quiet else None, args.resume)
     print()
 
-    print(ReportGenerator.generate_sync_report(result, args.output))
+    print(ReportGenerator.generate_migration_report(result, args.output))
 
 
 def cmd_sync_list(args):
@@ -473,6 +588,7 @@ def main():
 
     c_list = config_subparsers.add_parser("list", help="List configs")
     c_list.add_argument("--profile", help="Profile name")
+    c_list.add_argument("--test-all", action="store_true", help="Test all connections (slower)")
     c_list.set_defaults(func=cmd_config_list)
 
     c_test = config_subparsers.add_parser("test", help="Test connection")
@@ -629,52 +745,10 @@ def main():
     a_cp.add_argument("--profile", help="Profile name")
     a_cp.set_defaults(func=cmd_acl_cp)
 
-    migrate_parser = subparsers.add_parser("migrate", help="Migration operations")
-    migrate_subparsers = migrate_parser.add_subparsers(dest="migrate_command")
-
-    m_run = migrate_subparsers.add_parser("run", help="Run migration")
-    m_run.add_argument("--source", required=True, help="Source config name")
-    m_run.add_argument("--source-bucket", required=True, help="Source bucket")
-    m_run.add_argument("--source-prefix", help="Source prefix")
-    m_run.add_argument("--target", required=True, help="Target config name")
-    m_run.add_argument("--target-bucket", required=True, help="Target bucket")
-    m_run.add_argument("--target-prefix", help="Target prefix")
-    m_run.add_argument("--threads", type=int, default=10, help="Threads")
-    m_run.add_argument("--part-size", type=int, default=8, help="Part size (MB)")
-    m_run.add_argument("--storage-class", help="Storage class")
-    m_run.add_argument("--preserve-metadata", action="store_true", default=True, help="Preserve metadata")
-    m_run.add_argument("--preserve-acl", action="store_true", default=True, help="Preserve ACL")
-    m_run.add_argument("--exclude", nargs="+", help="Exclude patterns")
-    m_run.add_argument("--include", nargs="+", help="Include patterns")
-    m_run.add_argument("--dry-run", action="store_true", help="Dry run")
-    m_run.add_argument("--resume", action="store_true", help="Resume migration")
-    m_run.add_argument("--profile", help="Profile name")
-    m_run.add_argument("--output", choices=["json", "table"], default="table")
-    m_run.add_argument("--quiet", action="store_true", help="Quiet mode")
-    m_run.set_defaults(func=cmd_migrate_run)
-
-    m_preview = migrate_subparsers.add_parser("preview", help="Preview migration")
-    m_preview.add_argument("--source", required=True, help="Source config name")
-    m_preview.add_argument("--source-bucket", required=True, help="Source bucket")
-    m_preview.add_argument("--source-prefix", help="Source prefix")
-    m_preview.add_argument("--target", required=True, help="Target config name")
-    m_preview.add_argument("--target-bucket", required=True, help="Target bucket")
-    m_preview.add_argument("--profile", help="Profile name")
-    m_preview.add_argument("--output", choices=["json", "table"], default="table")
-    m_preview.set_defaults(func=cmd_migrate_preview)
-
-    m_list = migrate_subparsers.add_parser("list", help="List migrations")
-    m_list.add_argument("--limit", type=int, default=10, help="Limit")
-    m_list.set_defaults(func=cmd_migrate_list)
-
-    m_status = migrate_subparsers.add_parser("status", help="Migration status")
-    m_status.add_argument("--migration-id", required=True, help="Migration ID")
-    m_status.set_defaults(func=cmd_migrate_status)
-
-    sync_parser = subparsers.add_parser("sync", help="Sync operations")
+    sync_parser = subparsers.add_parser("sync", help="Sync/Migration operations")
     sync_subparsers = sync_parser.add_subparsers(dest="sync_command")
 
-    s_run = sync_subparsers.add_parser("run", help="Run sync")
+    s_run = sync_subparsers.add_parser("run", help="Run sync/migration")
     s_run.add_argument("--source", required=True, help="Source config name")
     s_run.add_argument("--source-bucket", required=True, help="Source bucket")
     s_run.add_argument("--source-prefix", help="Source prefix")
@@ -683,18 +757,28 @@ def main():
     s_run.add_argument("--target-prefix", help="Target prefix")
     s_run.add_argument("--since", help="Sync since (ISO format)")
     s_run.add_argument("--since-last-sync", action="store_true", help="Sync since last sync")
-    s_run.add_argument("--delete", action="store_true", help="Delete objects not in source")
+    s_run.add_argument("--delete", action="store_true", help="Delete objects not in source (sync mode)")
     s_run.add_argument("--threads", type=int, default=10, help="Threads")
+    s_run.add_argument("--part-size", type=int, default=8, help="Part size (MB)")
+    s_run.add_argument("--storage-class", help="Storage class")
     s_run.add_argument("--preserve-metadata", action="store_true", default=True, help="Preserve metadata")
     s_run.add_argument("--preserve-acl", action="store_true", default=True, help="Preserve ACL")
+    s_run.add_argument("--exclude", nargs="+", help="Exclude patterns")
+    s_run.add_argument("--include", nargs="+", help="Include patterns")
+    s_run.add_argument("--dry-run", action="store_true", help="Dry run")
+    s_run.add_argument("--resume", action="store_true", help="Resume migration")
     s_run.add_argument("--profile", help="Profile name")
     s_run.add_argument("--output", choices=["json", "table"], default="table")
     s_run.add_argument("--quiet", action="store_true", help="Quiet mode")
     s_run.set_defaults(func=cmd_sync_run)
 
-    s_list = sync_subparsers.add_parser("list", help="List syncs")
+    s_list = sync_subparsers.add_parser("list", help="List sync/migration history")
     s_list.add_argument("--limit", type=int, default=10, help="Limit")
     s_list.set_defaults(func=cmd_sync_list)
+
+    s_status = sync_subparsers.add_parser("status", help="Sync/migration status")
+    s_status.add_argument("--migration-id", required=True, help="Migration ID")
+    s_status.set_defaults(func=cmd_migrate_status)
 
     validate_parser = subparsers.add_parser("validate", help="Validation operations")
     validate_subparsers = validate_parser.add_subparsers(dest="validate_command")

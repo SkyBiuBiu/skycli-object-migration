@@ -35,17 +35,17 @@ class TestCLICommands:
                 main()
             assert pytest_wrapped_e.value.code == 0
 
-    def test_cli_migrate_help(self):
-        with patch("sys.stdout", new_callable=io.StringIO) as mock_stdout:
-            with pytest.raises(SystemExit) as pytest_wrapped_e:
-                sys.argv = ["skycli", "migrate", "--help"]
-                main()
-            assert pytest_wrapped_e.value.code == 0
-
     def test_cli_sync_help(self):
         with patch("sys.stdout", new_callable=io.StringIO) as mock_stdout:
             with pytest.raises(SystemExit) as pytest_wrapped_e:
                 sys.argv = ["skycli", "sync", "--help"]
+                main()
+            assert pytest_wrapped_e.value.code == 0
+
+    def test_cli_sync_run_help(self):
+        with patch("sys.stdout", new_callable=io.StringIO) as mock_stdout:
+            with pytest.raises(SystemExit) as pytest_wrapped_e:
+                sys.argv = ["skycli", "sync", "run", "--help"]
                 main()
             assert pytest_wrapped_e.value.code == 0
 
@@ -91,7 +91,7 @@ class TestCLIConfigCommands:
             assert "added successfully" in output.lower()
 
     @patch("s3_manager.skycli.config")
-    def test_config_list(self, mock_config):
+    def test_config_list_fast_mode(self, mock_config):
         mock_config.list_profiles.return_value = [
             {
                 "name": "test-config",
@@ -106,6 +106,26 @@ class TestCLIConfigCommands:
 
             output = mock_stdout.getvalue()
             assert "test-config" in output
+            assert "Tip: Use --test-all" in output
+
+    @patch("s3_manager.skycli.config")
+    def test_config_list_with_test_all(self, mock_config):
+        mock_config.list_profiles.return_value = [
+            {
+                "name": "test-config",
+                "endpoint": TEST_ENDPOINT,
+                "region": "us-east-1"
+            }
+        ]
+        mock_config.test_connection.return_value = {"success": True}
+
+        with patch("sys.stdout", new_callable=io.StringIO) as mock_stdout:
+            sys.argv = ["skycli", "config", "list", "--test-all"]
+            main()
+
+            output = mock_stdout.getvalue()
+            assert "test-config" in output
+            assert "成功" in output or "✓" in output
 
     @patch("s3_manager.skycli.config")
     def test_config_test_success(self, mock_config):
@@ -249,3 +269,96 @@ class TestCLIACLCommands:
 
             output = mock_stdout.getvalue()
             assert "owner123" in output
+
+
+class TestCLISyncDryRun:
+    @patch("s3_manager.skycli.get_client")
+    def test_sync_dry_run_no_changes(self, mock_get_client):
+        mock_client = MagicMock()
+        mock_client.list_objects_all.return_value = iter([
+            {"Key": "file1.txt", "Size": 100, "ETag": '"abc123"'},
+            {"Key": "file2.txt", "Size": 200, "ETag": '"def456"'}
+        ])
+        mock_get_client.return_value = mock_client
+
+        with patch("sys.stdout", new_callable=io.StringIO) as mock_stdout:
+            sys.argv = [
+                "skycli", "sync", "run",
+                "--source", "test-source",
+                "--source-bucket", "src-bucket",
+                "--target", "test-target",
+                "--target-bucket", "dst-bucket",
+                "--dry-run"
+            ]
+            main()
+
+            output = mock_stdout.getvalue()
+            assert "Dry run" in output
+            assert "No changes were made" in output
+
+    @patch("s3_manager.skycli.get_client")
+    def test_sync_dry_run_with_upload(self, mock_get_client):
+        mock_source_client = MagicMock()
+        mock_source_client.list_objects_all.return_value = iter([
+            {"Key": "newfile.txt", "Size": 100, "ETag": '"abc123"'}
+        ])
+
+        mock_target_client = MagicMock()
+        mock_target_client.list_objects_all.return_value = iter([])
+
+        def get_client_side_effect(config_name, profile=None):
+            if "source" in config_name:
+                return mock_source_client
+            return mock_target_client
+
+        mock_get_client.side_effect = get_client_side_effect
+
+        with patch("sys.stdout", new_callable=io.StringIO) as mock_stdout:
+            sys.argv = [
+                "skycli", "sync", "run",
+                "--source", "test-source",
+                "--source-bucket", "src-bucket",
+                "--target", "test-target",
+                "--target-bucket", "dst-bucket",
+                "--dry-run"
+            ]
+            main()
+
+            output = mock_stdout.getvalue()
+            assert "Dry run" in output
+            assert "Objects to upload: 1" in output
+            assert "[UPLOAD]" in output
+
+    @patch("s3_manager.skycli.get_client")
+    def test_sync_dry_run_with_delete(self, mock_get_client):
+        mock_source_client = MagicMock()
+        mock_source_client.list_objects_all.return_value = iter([])
+
+        mock_target_client = MagicMock()
+        mock_target_client.list_objects_all.return_value = iter([
+            {"Key": "orphan.txt", "Size": 100, "ETag": '"abc123"'}
+        ])
+
+        def get_client_side_effect(config_name, profile=None):
+            if "source" in config_name:
+                return mock_source_client
+            return mock_target_client
+
+        mock_get_client.side_effect = get_client_side_effect
+
+        with patch("sys.stdout", new_callable=io.StringIO) as mock_stdout:
+            sys.argv = [
+                "skycli", "sync", "run",
+                "--source", "test-source",
+                "--source-bucket", "src-bucket",
+                "--target", "test-target",
+                "--target-bucket", "dst-bucket",
+                "--dry-run",
+                "--delete"
+            ]
+            main()
+
+            output = mock_stdout.getvalue()
+            assert "Dry run" in output
+            assert "Objects to delete: 1" in output
+            assert "[DELETE]" in output

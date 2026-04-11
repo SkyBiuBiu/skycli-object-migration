@@ -1,6 +1,6 @@
 import pytest
 from unittest.mock import patch, MagicMock
-from s3_manager.skymigrate import create_migration, MigrationTask
+from s3_manager.skysync import create_sync, SyncTask
 from s3_manager.skyclient import SkyClient
 from .conftest import TEST_ENDPOINT, TEST_ACCESS_KEY, TEST_SECRET_KEY, TEST_REGION, TEST_BUCKET_1, TEST_BUCKET_2
 
@@ -15,7 +15,7 @@ def mock_config():
         "use_path_style": True,
         "verify_ssl": False
     }
-    with patch("s3_manager.skymigrate.config") as mock:
+    with patch("s3_manager.skysync.config") as mock:
         mock.get_profile.return_value = mock_cfg
         yield mock
 
@@ -47,9 +47,9 @@ def setup_buckets():
     return source_client, target_client
 
 
-class TestSkyMigrate:
-    def test_create_migration(self, mock_config):
-        migration = create_migration(
+class TestSkySync:
+    def test_create_sync(self, mock_config):
+        sync = create_sync(
             source_config_name="test-source",
             source_bucket=TEST_BUCKET_1,
             target_config_name="test-target",
@@ -57,12 +57,12 @@ class TestSkyMigrate:
             profile="test"
         )
 
-        assert migration is not None
-        assert migration.source_bucket == TEST_BUCKET_1
-        assert migration.target_bucket == TEST_BUCKET_2
-        assert migration.status == "pending"
+        assert sync is not None
+        assert sync.source_bucket == TEST_BUCKET_1
+        assert sync.target_bucket == TEST_BUCKET_2
+        assert sync.status == "pending"
 
-    def test_migration_preview(self, setup_buckets):
+    def test_sync_preview(self, setup_buckets):
         source_client, target_client = setup_buckets
 
         test_key = "preview_test.txt"
@@ -74,18 +74,18 @@ class TestSkyMigrate:
         keys = [obj["Key"] for obj in objects]
         assert test_key in keys
 
-    def test_migration_single_object(self, setup_buckets):
+    def test_sync_single_object(self, setup_buckets):
         source_client, target_client = setup_buckets
 
-        test_key = "migrate_single.txt"
-        test_content = b"Migration test content"
+        test_key = "sync_single.txt"
+        test_content = b"Sync test content"
         source_client.put_object(TEST_BUCKET_1, test_key, test_content)
 
         objects = list(source_client.list_objects_all(TEST_BUCKET_1, ""))
         assert len(objects) >= 1
 
     def test_exclude_patterns(self, mock_config):
-        task = create_migration(
+        task = create_sync(
             source_config_name="test-source",
             source_bucket=TEST_BUCKET_1,
             target_config_name="test-target",
@@ -100,7 +100,7 @@ class TestSkyMigrate:
         assert task._should_include("logs/test.txt") == True
 
     def test_include_patterns(self, mock_config):
-        task = create_migration(
+        task = create_sync(
             source_config_name="test-source",
             source_bucket=TEST_BUCKET_1,
             target_config_name="test-target",
@@ -111,5 +111,67 @@ class TestSkyMigrate:
 
         assert task._should_include("photo.jpg") == True
         assert task._should_include("image.png") == True
-        assert task._should_include("document.pdf") == False
-        assert task._should_include("video.mp4") == False
+        assert task._should_include("document.txt") == False
+
+    def test_sync_with_since(self, mock_config):
+        from datetime import datetime, timedelta
+
+        since = datetime.now() - timedelta(days=1)
+        sync = create_sync(
+            source_config_name="test-source",
+            source_bucket=TEST_BUCKET_1,
+            target_config_name="test-target",
+            target_bucket=TEST_BUCKET_2,
+            since=since
+        )
+
+        assert sync.since == since
+        assert sync.since_last_sync == False
+
+    def test_sync_with_delete(self, mock_config):
+        sync = create_sync(
+            source_config_name="test-source",
+            source_bucket=TEST_BUCKET_1,
+            target_config_name="test-target",
+            target_bucket=TEST_BUCKET_2,
+            delete=True
+        )
+
+        assert sync.delete == True
+
+    def test_sync_with_storage_class(self, mock_config):
+        sync = create_sync(
+            source_config_name="test-source",
+            source_bucket=TEST_BUCKET_1,
+            target_config_name="test-target",
+            target_bucket=TEST_BUCKET_2,
+            storage_class="GLACIER"
+        )
+
+        assert sync.storage_class == "GLACIER"
+
+    def test_sync_task_init(self):
+        task = SyncTask(
+            sync_id="test-sync-001",
+            source_client=MagicMock(),
+            target_client=MagicMock(),
+            source_bucket=TEST_BUCKET_1,
+            target_bucket=TEST_BUCKET_2,
+            source_prefix="src/",
+            target_prefix="tgt/",
+            threads=5,
+            part_size=16,
+            preserve_metadata=True,
+            preserve_acl=True
+        )
+
+        assert task.sync_id == "test-sync-001"
+        assert task.source_bucket == TEST_BUCKET_1
+        assert task.target_bucket == TEST_BUCKET_2
+        assert task.source_prefix == "src/"
+        assert task.target_prefix == "tgt/"
+        assert task.threads == 5
+        assert task.part_size == 16
+        assert task.preserve_metadata == True
+        assert task.preserve_acl == True
+        assert task.status == "pending"

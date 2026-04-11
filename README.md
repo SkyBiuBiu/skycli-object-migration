@@ -6,7 +6,7 @@
 
 - 多存储源配置管理
 - 存储桶和对象操作
-- 跨存储提供商数据迁移
+- 跨存储提供商数据迁移/同步
 - 元数据与 ACL 完整迁移与校验
 - 增量同步与断点续传
 - 数据完整性校验 (内容/元数据/ACL)
@@ -100,6 +100,21 @@ skycli object list --source aws-prod --bucket my-bucket --prefix logs/2024/
 | `--use-path-style` | 否  | 使用 path-style 寻址  |
 | `--no-verify-ssl`  | 否  | 禁用 SSL 验证         |
 | `--profile`        | 否  | 配置文件名             |
+
+### config list 参数
+
+| 参数           | 说明                    |
+| ------------ | --------------------- |
+| `--test-all` | 测试所有连接状态            |
+| `--profile`  | 指定配置文件名              |
+
+```bash
+# 快速列出配置（不测试连接）
+skycli config list
+
+# 列出配置并测试连接状态
+skycli config list --test-all
+```
 
 ## 存储桶命令 (bucket)
 
@@ -229,90 +244,110 @@ skycli acl cp \
   --target minio-dev --target-bucket bucket2 --target-key copy.txt
 ```
 
-## 迁移命令 (migrate)
-
-### migrate run - 执行迁移
-
-```bash
-skycli migrate run \
-  --source aws-prod --source-bucket src-bucket \
-  --target minio-dev --target-bucket dst-bucket \
-  [--source-prefix path/] \
-  [--target-prefix archive/path/] \
-  [--threads 10] \
-  [--storage-class GLACIER] \
-  [--preserve-metadata] \
-  [--preserve-acl] \
-  [--exclude "*.tmp"] \
-  [--include "*.jpg"] \
-  [--resume]
-```
-
-### migrate preview - 预览迁移
-
-```bash
-skycli migrate preview \
-  --source aws-prod --source-bucket src-bucket \
-  --target minio-dev --target-bucket dst-bucket
-```
-
-### migrate list - 查看迁移历史
-
-```bash
-skycli migrate list --limit 10
-```
-
-### migrate status - 查看迁移状态
-
-```bash
-skycli migrate status --migration-id mig-20240115-xxx
-```
-
-### 参数说明
-
-| 参数                    | 说明            |
-| --------------------- | ------------- |
-| `--source`            | 源配置名称         |
-| `--source-bucket`     | 源存储桶          |
-| `--source-prefix`     | 源前缀           |
-| `--target`            | 目标配置名称        |
-| `--target-bucket`     | 目标存储桶         |
-| `--target-prefix`     | 目标前缀          |
-| `--threads`           | 并发线程数，默认 10   |
-| `--part-size`         | 分块大小(MB)，默认 8 |
-| `--storage-class`     | 目标存储类别        |
-| `--preserve-metadata` | 保留原始元数据       |
-| `--preserve-acl`      | 保留原始 ACL      |
-| `--exclude`           | 排除匹配模式        |
-| `--include`           | 仅包含匹配模式       |
-| `--dry-run`           | 预览模式，不执行      |
-| `--resume`            | 从断点继续         |
-| `--profile`           | 配置文件名         |
-| `--output`            | 输出格式          |
-
 ## 同步命令 (sync)
 
-### sync run - 执行同步
+`sync` 命令统一了数据迁移和增量同步功能。通过 `--since`、`--since-last-sync` 或 `--delete` 参数可启用增量同步模式。
+
+### sync run - 执行同步/迁移
 
 ```bash
+# 完整迁移（无增量参数）
+skycli sync run \
+  --source aws-prod --source-bucket src-bucket \
+  --target minio-dev --target-bucket dst-bucket
+
+# 增量同步（自指定时间以来修改的对象）
 skycli sync run \
   --source aws-prod --source-bucket data \
   --target minio-dev --target-bucket backup \
-  [--source-prefix logs/] \
-  [--target-prefix archive/logs/] \
-  [--since 2024-01-01] \
-  [--since-last-sync] \
-  [--delete] \
-  [--threads 10]
+  --since 2024-01-01T00:00:00Z
+
+# 增量同步（自上次同步以来修改的对象）
+skycli sync run \
+  --source aws-prod --source-bucket data \
+  --target minio-dev --target-bucket backup \
+  --since-last-sync
+
+# 同步+删除（目标中有但源中已删除的对象）
+skycli sync run \
+  --source aws-prod --source-bucket data \
+  --target minio-dev --target-bucket backup \
+  --since-last-sync \
+  --delete
 ```
 
-### 参数说明
+### 完整参数说明
 
-| 参数                  | 说明                |
-| ------------------- | ----------------- |
-| `--since`           | 同步指定时间之后修改的对象     |
-| `--since-last-sync` | 同步上次同步之后修改的对象     |
-| `--delete`          | 删除目标中存在但源中已不存在的对象 |
+| 参数                    | 必填 | 说明                           |
+| --------------------- | -- | ---------------------------- |
+| `--source`            | 是  | 源配置名称                        |
+| `--source-bucket`     | 是  | 源存储桶                        |
+| `--source-prefix`      | 否  | 源前缀                          |
+| `--target`            | 是  | 目标配置名称                      |
+| `--target-bucket`     | 是  | 目标存储桶                       |
+| `--target-prefix`      | 否  | 目标前缀                        |
+| `--since`             | 否  | 同步指定时间之后修改的对象 (ISO格式)    |
+| `--since-last-sync`   | 否  | 同步上次同步之后修改的对象            |
+| `--delete`            | 否  | 删除目标中存在但源中已不存在的对象       |
+| `--threads`           | 否  | 并发线程数，默认 10               |
+| `--part-size`         | 否  | 分块大小(MB)，默认 8              |
+| `--storage-class`     | 否  | 目标存储类别                      |
+| `--preserve-metadata` | 否  | 保留原始元数据                     |
+| `--preserve-acl`      | 否  | 保留原始 ACL                    |
+| `--exclude`           | 否  | 排除匹配模式（支持通配符）             |
+| `--include`           | 否  | 仅包含匹配模式（支持通配符）           |
+| `--dry-run`           | 否  | 预览模式，不执行实际迁移               |
+| `--resume`            | 否  | 从断点继续                        |
+| `--profile`           | 否  | 配置文件名                       |
+| `--output`            | 否  | 输出格式 (json/table)           |
+| `--quiet`             | 否  | 静默模式                         |
+
+### sync 子命令
+
+| 命令               | 说明          |
+| ---------------- | ----------- |
+| `skycli sync run`    | 执行同步/迁移     |
+| `skycli sync list`   | 查看同步历史      |
+| `skycli sync status` | 查看同步状态      |
+
+### 示例
+
+```bash
+# 预览同步（dry-run，不实际执行）
+skycli sync run \
+  --source aws-prod --source-bucket src-bucket \
+  --target minio-dev --target-bucket dst-bucket \
+  --dry-run
+
+# 查看同步历史
+skycli sync list --limit 10
+
+# 查看同步状态
+skycli sync status --migration-id sync-20240115-xxx
+
+# 复杂迁移示例：指定存储类、保留元数据ACL、排除临时文件
+skycli sync run \
+  --source aws-prod --source-bucket src-bucket \
+  --target minio-dev --target-bucket dst-bucket \
+  --source-prefix data/ \
+  --target-prefix archive/data/ \
+  --storage-class GLACIER \
+  --preserve-metadata \
+  --preserve-acl \
+  --exclude "*.tmp" \
+  --exclude "temp/*" \
+  --exclude ".git/*" \
+  --threads 20 \
+  --part-size 16
+```
+
+### 模式说明
+
+| 模式    | 参数组合                          | 说明                    |
+| ----- | ------------------------------ | --------------------- |
+| 迁移模式 | 无 `--since`、`--since-last-sync` | 一次性完整迁移所有对象         |
+| 增量同步 | `--since` 或 `--since-last-sync`   | 只同步指定时间/上次同步后变化的对象  |
+| 镜像模式 | `--since-last-sync --delete`       | 增量同步并删除目标中多余的对象     |
 
 ## 校验命令 (validate)
 
@@ -374,7 +409,7 @@ skycli validate report --validation-id val-20240115-001
 
 ```bash
 --output json   # JSON 格式
---output table   # 表格格式 (默认)
+--output table  # 表格格式 (默认)
 ```
 
 ## 全局参数
@@ -411,11 +446,11 @@ profiles:
     verify_ssl: false
 ```
 
-## 迁移状态文件
+## 状态文件
 
-迁移和同步的状态信息保存在:
+同步和校验的状态信息保存在:
 
-- 迁移检查点: `~/.skycli/checkpoints/`
+- 检查点: `~/.skycli/checkpoints/`
 - 同步状态: `~/.skycli/sync-state/`
 - 校验报告: `~/.skycli/validation-reports/`
 
@@ -459,7 +494,7 @@ profiles:
 ### Q: 迁移中断如何续传？
 
 ```bash
-skycli migrate run \
+skycli sync run \
   --source aws-prod --source-bucket src \
   --target minio-dev --target-bucket dst \
   --resume
@@ -468,7 +503,7 @@ skycli migrate run \
 ### Q: 如何只迁移特定类型的文件？
 
 ```bash
-skycli migrate run \
+skycli sync run \
   --source aws-prod --source-bucket src \
   --target minio-dev --target-bucket dst \
   --include "*.jpg" \
@@ -479,13 +514,49 @@ skycli migrate run \
 ### Q: 如何排除不需要迁移的文件？
 
 ```bash
-skycli migrate run \
+skycli sync run \
   --source aws-prod --source-bucket src \
   --target minio-dev --target-bucket dst \
   --exclude "temp/*" \
   --exclude "*.tmp" \
   --exclude ".git/*"
 ```
+
+## 更新日志 (Changelog)
+
+### v0.2.0 (2026-04-11)
+
+**重大更新：合并 sync 和 migrate 命令**
+
+- 统一 `sync` 命令，整合原 `migrate` 和 `sync` 的所有功能
+- 删除独立的 `migrate` 命令，现通过 `sync` 命令统一提供
+- 新增 `--since` 参数支持指定时间以来的增量同步
+- 新增 `--since-last-sync` 参数支持自上次同步以来的增量同步
+- 新增 `--delete` 参数支持目标端删除操作（镜像模式）
+- 增强断点续传功能，支持 checkpoint 机制
+- 优化并发处理，使用 ThreadPoolExecutor 提升性能
+
+**功能增强**
+
+- 实现 `--dry-run` 参数，对比源和目标显示同步差异但不执行
+- 删除 `preview` 子命令，统一由 `--dry-run` 提供预览功能
+- 合并 `migrate list` 到 `sync list`
+- 合并 `migrate status` 到 `sync status`
+- 统一 `get_sync_history()` 函数替代原 `get_migration_history()`
+- 统一 `get_sync()` 函数替代原 `get_migration()`
+
+### v0.1.0 (2026-04-10)
+
+**初始版本**
+
+- 配置管理（添加、列出、测试、删除）
+- 存储桶操作（列出、创建、删除、信息）
+- 对象操作（列出、上传、下载、删除、复制）
+- 元数据管理（查看、设置）
+- ACL管理（查看、设置、复制）
+- 数据迁移（`migrate` 命令）
+- 增量同步（`sync` 命令）
+- 数据校验（内容、元数据、ACL）
 
 ## 许可证
 
