@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="skycli",
-    version="0.1.0",
+    version="0.2.0",
     description="S3 Compatible Object Storage Manager and Migration Tool",
     author="SkyCLI",
     packages=find_packages(),

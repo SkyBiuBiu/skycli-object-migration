@@ -341,7 +341,7 @@ def cmd_acl_cp(args):
 def cmd_migrate_run(args):
     print(f"Starting migration...")
 
-    migration = create_migration(
+    migration = create_sync(
         source_config_name=args.source,
         source_bucket=args.source_bucket,
         target_config_name=args.target,

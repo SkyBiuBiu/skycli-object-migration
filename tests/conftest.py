@@ -2,12 +2,12 @@ import pytest
 import os
 
 
-TEST_ENDPOINT = "http://192.168.100.128:9000"
-TEST_ACCESS_KEY = "admin"
-TEST_SECRET_KEY = "Tell12#$%^"
-TEST_BUCKET_1 = "demo"
-TEST_BUCKET_2 = "test2"
-TEST_REGION = "us-east-1"
+TEST_ENDPOINT = os.environ.get("SKYCLI_TEST_ENDPOINT", "http://localhost:9000")
+TEST_ACCESS_KEY = os.environ.get("SKYCLI_TEST_ACCESS_KEY", "test")
+TEST_SECRET_KEY = os.environ.get("SKYCLI_TEST_SECRET_KEY", "test")
+TEST_BUCKET_1 = os.environ.get("SKYCLI_TEST_BUCKET_1", "test-bucket-1")
+TEST_BUCKET_2 = os.environ.get("SKYCLI_TEST_BUCKET_2", "test-bucket-2")
+TEST_REGION = os.environ.get("SKYCLI_TEST_REGION", "us-east-1")
 
 
 @pytest.fixture

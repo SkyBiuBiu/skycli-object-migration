@@ -5,9 +5,9 @@ from .skyclient import SkyClient
 class SkyACL:
     PERMISSIONS = ["READ", "WRITE", "READ_ACP", "WRITE_ACP", "FULL_CONTROL"]
     CANONICAL_USER_PREFIX = "https://s3.amazonaws.com/docs_static/2014-01-01-RightAmazonS3.html#canonical-user-id"
-    ALL_USERS_URI = "http://acs.amazonaws.com/groups/global/AllUsers"
-    AUTHENTICATED_USERS_URI = "http://acs.amazonaws.com/groups/global/AuthenticatedUsers"
-    LOG_DELIVERY_URI = "http://acs.amazonaws.com/groups/s3/LogDelivery"
+    ALL_USERS_URI = "https://acs.amazonaws.com/groups/global/AllUsers"
+    AUTHENTICATED_USERS_URI = "https://acs.amazonaws.com/groups/global/AuthenticatedUsers"
+    LOG_DELIVERY_URI = "https://acs.amazonaws.com/groups/s3/LogDelivery"
 
     def __init__(self, client: SkyClient):
         self.client = client

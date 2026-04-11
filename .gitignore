@@ -36,6 +36,10 @@ env/
 # Local config (contains secrets)
 *.local
 config.local.yaml
+.skycli/
+
+# Test
+tests/.env
 
 # Logs
 *.log
