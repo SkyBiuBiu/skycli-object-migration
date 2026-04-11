@@ -1,3 +1,5 @@
+
+
 # SkyCLI - S3 兼容对象存储管理/迁移工具
 
 基于 AWS S3 SDK (boto3) 开发的命令行工具，支持管理和迁移 S3 协议兼容的对象存储服务，包括 AWS S3、MinIO、Ceph、阿里云 OSS、腾讯云 COS 等。
@@ -22,7 +24,7 @@ pip install skycli
 ### 方式二：源码安装
 
 ```bash
-cd sky_object_migration
+cd skycli-object-migration
 pip install -e .
 ```
 
