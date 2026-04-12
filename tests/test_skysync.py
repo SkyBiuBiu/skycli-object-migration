@@ -175,3 +175,75 @@ class TestSkySync:
         assert task.preserve_metadata == True
         assert task.preserve_acl == True
         assert task.status == SyncStatus.PENDING
+
+    def test_sync_delete_removes_orphan_objects(self):
+        task = SyncTask(
+            sync_id="test-sync-001",
+            source_client=MagicMock(),
+            target_client=MagicMock(),
+            source_bucket=TEST_BUCKET_1,
+            target_bucket=TEST_BUCKET_2,
+            source_prefix="",
+            target_prefix="",
+            threads=1
+        )
+
+        source_objects = [
+            {"Key": "file1.txt", "Size": 100},
+            {"Key": "file2.txt", "Size": 200}
+        ]
+
+        target_objects = {
+            "file1.txt": {"Key": "file1.txt", "Size": 100},
+            "file2.txt": {"Key": "file2.txt", "Size": 200},
+            "orphan.txt": {"Key": "orphan.txt", "Size": 50}
+        }
+
+        task._sync_delete(target_objects, source_objects)
+
+        task.target_client.delete_object.assert_called_with(TEST_BUCKET_2, "orphan.txt")
+        assert task.deleted == 1
+
+    def test_sync_delete_with_prefix(self):
+        task = SyncTask(
+            sync_id="test-sync-001",
+            source_client=MagicMock(),
+            target_client=MagicMock(),
+            source_bucket=TEST_BUCKET_1,
+            target_bucket=TEST_BUCKET_2,
+            source_prefix="src/",
+            target_prefix="dst/",
+            threads=1
+        )
+
+        source_objects = [
+            {"Key": "src/file1.txt", "Size": 100}
+        ]
+
+        target_objects = {
+            "file1.txt": {"Key": "dst/file1.txt", "Size": 100},
+            "orphan.txt": {"Key": "dst/orphan.txt", "Size": 50}
+        }
+
+        task._sync_delete(target_objects, source_objects)
+
+        task.target_client.delete_object.assert_called_with(TEST_BUCKET_2, "orphan.txt")
+        assert task.deleted == 1
+
+    def test_get_summary_returns_string_status(self):
+        task = SyncTask(
+            sync_id="test-sync-001",
+            source_client=MagicMock(),
+            target_client=MagicMock(),
+            source_bucket=TEST_BUCKET_1,
+            target_bucket=TEST_BUCKET_2,
+            source_prefix="",
+            target_prefix="",
+            threads=1
+        )
+
+        task.status = SyncStatus.COMPLETED
+        summary = task.get_summary()
+
+        assert summary["status"] == "completed"
+        assert isinstance(summary["status"], str)

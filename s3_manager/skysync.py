@@ -168,9 +168,9 @@ class SyncTask:
             "source_prefix": self.source_prefix,
             "target_prefix": self.target_prefix,
             "processed_keys": list(self._checkpoint_cache),
-            "status": self.status,
+            "status": self.status.value,
             "total_objects": self.total_objects,
-            "processed_objects": self.processed_objects,
+            "processed·_objects": self.processed_objects,
             "uploaded": self.uploaded,
             "deleted": self.deleted,
             "failed": self.failed,
@@ -194,7 +194,7 @@ class SyncTask:
             "source_prefix": self.source_prefix,
             "target_prefix": self.target_prefix,
             "last_sync_time": datetime.now().isoformat(),
-            "status": self.status
+            "status": self.status.value
         }
 
         with open(self.state_file, "w", encoding="utf-8") as f:
@@ -513,7 +513,7 @@ class SyncTask:
 
         return {
             "sync_id": self.sync_id,
-            "status": self.status,
+            "status": self.status.value,
             "source_bucket": self.source_bucket,
             "target_bucket": self.target_bucket,
             "source_prefix": self.source_prefix,

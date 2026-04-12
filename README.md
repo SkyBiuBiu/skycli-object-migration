@@ -633,6 +633,24 @@ skycli sync run \
 
 ## 📜 更新日志 (Changelog)
 
+### 🆕 v0.3.4 (2026-04-12)
+
+**Bug 修复**
+
+- 修复 `SyncStatus` 枚举 JSON 序列化错误：`Object of type SyncStatus is not JSON serializable`
+- 修复 `--delete` 模式删除统计未在报告中显示的问题
+
+**代码改进**
+
+- 同步模式使用 `generate_sync_report()` 生成报告，迁移模式使用 `generate_migration_report()`
+- 新增 `_sync_delete()` 单元测试，验证删除孤儿对象和前缀处理
+
+**新增测试**
+
+- `test_sync_delete_removes_orphan_objects` - 验证删除孤儿对象
+- `test_sync_delete_with_prefix` - 验证带前缀的删除
+- `test_get_summary_returns_string_status` - 验证状态返回字符串
+
 ### 🆕 v0.3.3 (2026-04-12)
 
 **Gitee 仓库链接修复**

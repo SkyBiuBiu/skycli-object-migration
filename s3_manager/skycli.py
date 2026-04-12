@@ -500,7 +500,10 @@ def cmd_sync_run(args):
     result = sync_task.run(progress_callback if not args.quiet else None, args.resume)
     print()
 
-    print(ReportGenerator.generate_migration_report(result, args.output))
+    if mode == "migration":
+        print(ReportGenerator.generate_migration_report(result, args.output))
+    else:
+        print(ReportGenerator.generate_sync_report(result, args.output))
 
 
 def cmd_sync_list(args):
