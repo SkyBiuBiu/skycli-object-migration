@@ -1,8 +1,20 @@
 from setuptools import setup, find_packages
+import os
+import re
+
+def get_version():
+    """Read version from _version.py without importing the package"""
+    version_file = os.path.join(os.path.dirname(__file__), "s3_manager", "_version.py")
+    with open(version_file, "r", encoding="utf-8") as f:
+        content = f.read()
+        match = re.search(r'^__version__ = ["\']([^"\']+)["\']', content, re.MULTILINE)
+        if match:
+            return match.group(1)
+    raise RuntimeError("Unable to find version string")
 
 setup(
     name="skycli",
-    version="0.2.0",
+    version=get_version(),
     description="S3 Compatible Object Storage Manager and Migration Tool",
     author="SkyCLI",
     packages=find_packages(),

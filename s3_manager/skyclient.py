@@ -78,7 +78,7 @@ class SkyClient:
                 "success": False,
                 "error": str(e)
             }
-        except botocore.exceptions.ConnectionError as e:
+        except botocore.exceptions.EndpointConnectionError as e:
             return {
                 "success": False,
                 "error": f"Connection failed: {str(e)}"
@@ -362,7 +362,7 @@ class SkyClient:
         try:
             self._client.head_bucket(Bucket=bucket)
             return True
-        except:
+        except Exception:
             return False
 
     def get_bucket_location(self, bucket: str) -> str:
@@ -374,7 +374,7 @@ class SkyClient:
             response = self._client.get_bucket_policy(Bucket=bucket)
             import json
             return json.loads(response["Policy"])
-        except:
+        except Exception:
             return None
 
     def put_bucket_policy(self, bucket: str, policy: Dict):

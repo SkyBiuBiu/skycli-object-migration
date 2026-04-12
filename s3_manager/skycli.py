@@ -10,6 +10,7 @@ from .skyacl import SkyACL
 from .skysync import create_sync, get_sync, get_sync_history
 from .skyvalidate import create_validation, get_validation_report, list_validation_reports
 from .skyreport import ReportGenerator
+from ._version import __version__
 
 
 def get_client(config_name: str, profile: Optional[str] = None) -> SkyClient:
@@ -561,6 +562,7 @@ def cmd_validate_list(args):
 
 def main():
     parser = argparse.ArgumentParser(prog="skycli", description="S3 Compatible Object Storage Manager")
+    parser.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
     subparsers = parser.add_subparsers(dest="command", help="Available commands")
 
     profile_parser = argparse.ArgumentParser(add_help=False)

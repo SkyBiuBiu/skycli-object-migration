@@ -67,7 +67,6 @@ class SyncTask:
         self.failed = 0
         self.total_bytes = 0
         self.transferred_bytes = 0
-        self.failed_objects = 0
         self.failed_list = []
 
         self.state_file = Path.home() / ".skycli" / "sync-state" / f"{sync_id}.json"
@@ -299,7 +298,6 @@ class SyncTask:
                         self.uploaded += 1
                 else:
                     self.failed += 1
-                    self.failed_objects += 1
                     self.failed_list.append(result)
 
                 if progress_callback:
@@ -317,7 +315,7 @@ class SyncTask:
         if self.delete:
             self._sync_delete(target_objects, source_objects)
 
-        self.status = "completed" if self.failed_objects == 0 else "completed_with_errors"
+        self.status = "completed" if self.failed == 0 else "completed_with_errors"
         self.end_time = datetime.now()
         self._save_state()
 

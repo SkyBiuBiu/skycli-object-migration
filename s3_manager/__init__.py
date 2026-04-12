@@ -5,8 +5,8 @@ from .skyacl import SkyACL
 from .skysync import create_sync, get_sync, get_sync_history
 from .skyvalidate import create_validation, get_validation_report, list_validation_reports
 from .skyreport import ReportGenerator
+from ._version import __version__, get_version, get_version_info
 
-__version__ = "0.1.0"
 __all__ = [
     "config",
     "SkyClient",
@@ -18,5 +18,8 @@ __all__ = [
     "create_validation",
     "get_validation_report",
     "list_validation_reports",
-    "ReportGenerator"
+    "ReportGenerator",
+    "__version__",
+    "get_version",
+    "get_version_info"
 ]

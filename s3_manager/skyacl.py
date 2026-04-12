@@ -99,12 +99,6 @@ class SkyACL:
 
         self._set_acl_policy(**kwargs)
 
-    def _set_acl_simple(self, **kwargs):
-        if "Key" in kwargs:
-            self.client._client.put_object_acl(**kwargs)
-        else:
-            self.client._client.put_bucket_acl(**kwargs)
-
     def _set_acl_policy(self, **kwargs):
         if "Key" in kwargs:
             self.client._client.put_object_acl(**kwargs)
