@@ -1,5 +1,14 @@
 import pytest
 import os
+from pathlib import Path
+
+env_file = Path(__file__).parent / ".env"
+if env_file.exists():
+    for line in env_file.read_text().splitlines():
+        line = line.strip()
+        if line and not line.startswith("#") and "=" in line:
+            key, value = line.split("=", 1)
+            os.environ.setdefault(key.strip(), value.strip())
 
 
 TEST_ENDPOINT = os.environ.get("SKYCLI_TEST_ENDPOINT", "http://localhost:9000")

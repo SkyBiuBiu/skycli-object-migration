@@ -42,7 +42,7 @@ class SkyACL:
 
         if acl:
             kwargs["ACL"] = acl
-            self._set_acl_simple(**kwargs)
+            self._set_acl_policy(**kwargs)
             return
 
         access_control_policy = {

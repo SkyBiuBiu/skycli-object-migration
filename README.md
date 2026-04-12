@@ -526,6 +526,55 @@ skycli sync run \
 
 ## 更新日志 (Changelog)
 
+### v0.3.0 (2026-04-12)
+
+**代码质量优化**
+
+- 使用 `dataclass` 重构 `SyncTask` 类，代码更简洁清晰
+- 新增 `SyncStatus` 枚举类型，替代字符串状态
+- 新增 `SyncResult` 和 `SyncProgress` 数据类，统一返回值格式
+- 常量添加详细注释说明用途和单位
+
+**常量定义**
+
+- `LARGE_FILE_THRESHOLD = 100 MiB` - 触发分段上传的文件大小阈值
+- `CHECKPOINT_BATCH_SIZE = 100` - 每 N 个对象批量保存一次 checkpoint
+
+**类型安全增强**
+
+- 所有方法返回值使用明确的数据类而非 Dict
+- 状态管理使用 Enum 而非字符串，避免拼写错误
+- 改进类型注解，提升 IDE 支持
+
+### v0.2.3 (2026-04-12)
+
+**大文件处理优化**
+
+- 大文件（>100MB）采用 `upload_file` 分段上传，避免内存溢出
+- 临时文件下载到本地后上传，上传完成后自动清理
+- 新增 `_migrate_large_object` 和 `_migrate_small_object` 方法分离处理逻辑
+
+**Checkpoint 性能优化**
+
+- 批量 checkpoint 保存（每 100 个对象保存一次），减少磁盘 I/O
+- 新增 `_checkpoint_cache` 和 `_checkpoint_dirty` 状态追踪
+- 支持强制保存 `force=True` 参数
+
+**小文件处理优化**
+
+- 新增 `_prefetch_metadata` 方法预取大文件元数据，减少串行请求
+- 元数据缓存避免重复 HEAD 请求
+
+**MinIO 兼容性优化**
+
+- ACL 复制失败时捕获 `NotImplemented` 和 `MinIO` 相关异常
+- 避免因 ACL 不支持导致整个同步失败
+
+**日志和调试**
+
+- 添加 `logging` 模块支持，便于调试和问题排查
+- 优化 `run()` 方法中的日志输出
+
 ### v0.2.2 (2026-04-12)
 
 **版本管理优化**

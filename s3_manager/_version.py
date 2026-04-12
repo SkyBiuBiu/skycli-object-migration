@@ -2,11 +2,11 @@
 SkyCLI version management module
 """
 
-__version__ = "0.2.2"
+__version__ = "0.3.0"
 VERSION_INFO = {
     "major": 0,
-    "minor": 2,
-    "patch": 2,
+    "minor": 3,
+    "patch": 0,
     "release": True
 }
 

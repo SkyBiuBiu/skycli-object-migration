@@ -1,6 +1,6 @@
 import pytest
 from unittest.mock import patch, MagicMock
-from s3_manager.skysync import create_sync, SyncTask
+from s3_manager.skysync import create_sync, SyncTask, SyncStatus
 from s3_manager.skyclient import SkyClient
 from .conftest import TEST_ENDPOINT, TEST_ACCESS_KEY, TEST_SECRET_KEY, TEST_REGION, TEST_BUCKET_1, TEST_BUCKET_2
 
@@ -60,7 +60,7 @@ class TestSkySync:
         assert sync is not None
         assert sync.source_bucket == TEST_BUCKET_1
         assert sync.target_bucket == TEST_BUCKET_2
-        assert sync.status == "pending"
+        assert sync.status == SyncStatus.PENDING
 
     def test_sync_preview(self, setup_buckets):
         source_client, target_client = setup_buckets
@@ -174,4 +174,4 @@ class TestSkySync:
         assert task.part_size == 16
         assert task.preserve_metadata == True
         assert task.preserve_acl == True
-        assert task.status == "pending"
+        assert task.status == SyncStatus.PENDING
