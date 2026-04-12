@@ -1,43 +1,82 @@
+# SkyCLI
 
+[![PyPI version](https://img.shields.io/pypi/v/skycli)](https://pypi.org/project/skycli/)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Python versions](https://img.shields.io/badge/python-3.8%2B-3776AB.svg)](https://www.python.org/)
+[![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-success.svg)]()
 
-# SkyCLI - S3 兼容对象存储管理/迁移工具
+> 🚀 **简单、强大、高效的 S3 兼容对象存储管理/迁移工具**
 
-基于 AWS S3 SDK (boto3) 开发的命令行工具，支持管理和迁移 S3 协议兼容的对象存储服务，包括 AWS S3、MinIO、Ceph、阿里云 OSS、腾讯云 COS 等。
+基于 AWS S3 SDK (boto3) 开发，支持管理和迁移 S3 协议兼容的对象存储服务（AWS S3、MinIO、Ceph、阿里云 OSS、腾讯云 COS 等）。
 
-## 功能特性
+***
 
-- 多存储源配置管理
-- 存储桶和对象操作
-- 跨存储提供商数据迁移/同步
-- 元数据与 ACL 完整迁移与校验
-- 增量同步与断点续传
-- 数据完整性校验 (内容/元数据/ACL)
+## 📖 目录
 
-## 安装
+- [功能特性](#-功能特性)
+- [安装指南](#-安装指南)
+- [快速开始](#-快速开始)
+- [命令参考](#-命令参考)
+  - [配置管理](#-配置管理-config)
+  - [存储桶操作](#-存储桶操作-bucket)
+  - [对象操作](#-对象操作-object)
+  - [元数据管理](#-元数据管理-metadata)
+  - [ACL 管理](#-acl-管理-acl)
+  - [数据同步](#-数据同步-sync)
+  - [数据校验](#-数据校验-validate)
+- [配置说明](#-配置说明)
+- [常见问题](#-常见问题)
+- [更新日志](#-更新日志)
+- [贡献指南](#-贡献指南)
 
-### 方式一：pip 安装
+***
+
+## ✨ 功能特性
+
+| 特性            | 说明               |
+| ------------- | ---------------- |
+| 🔧 **多源配置**   | 支持多个存储源配置管理      |
+| 📦 **存储桶操作**  | 列出、创建、删除存储桶      |
+| 📁 **对象操作**   | 上传、下载、删除、复制对象    |
+| 🔄 **数据迁移**   | 跨存储提供商数据迁移/同步    |
+| 📝 **元数据迁移**  | 元数据完整迁移与校验       |
+| 🔐 **ACL 管理** | ACL 查看、设置、复制     |
+| ⚡ **增量同步**    | 支持增量同步与断点续传      |
+| ✅ **数据校验**    | 内容/元数据/ACL 完整性校验 |
+
+***
+
+## 📦 安装指南
+
+### 🔌 方式一：pip 安装
 
 ```bash
 pip install skycli
 ```
 
-### 方式二：源码安装
+### 💻 方式二：源码安装
 
 ```bash
-cd skycli-object-migration
+git clone https://github.com/your-repo/skycli.git
+cd skycli
 pip install -e .
 ```
 
-### 依赖
+### 📋 依赖环境
 
-- Python >= 3.8
-- boto3 >= 1.26.0
-- PyYAML >= 6.0
-- python-dateutil >= 2.8.0
+| 依赖              | 版本要求      | 说明         |
+| --------------- | --------- | ---------- |
+| Python          | >= 3.8    | 运行环境       |
+| boto3           | >= 1.26.0 | AWS S3 SDK |
+| PyYAML          | >= 6.0    | 配置文件解析     |
+| python-dateutil | >= 2.8.0  | 日期处理       |
+| watchdog        | >= 3.0.0  | 文件监控       |
 
-## 快速开始
+***
 
-### 1. 添加存储配置
+## 🚀 快速开始
+
+### 1️⃣ 添加存储配置
 
 ```bash
 # AWS S3
@@ -62,26 +101,30 @@ skycli config add --name ali-oss \
   --region cn-hangzhou
 ```
 
-### 2. 测试连接
+### 2️⃣ 测试连接
 
 ```bash
 skycli config test --name aws-prod
 ```
 
-### 3. 列出存储桶
+### 3️⃣ 列出存储桶
 
 ```bash
 skycli bucket list --source aws-prod
 ```
 
-### 4. 列出对象
+### 4️⃣ 列出对象
 
 ```bash
 skycli object list --source aws-prod --bucket my-bucket
 skycli object list --source aws-prod --bucket my-bucket --prefix logs/2024/
 ```
 
-## 配置管理命令 (config)
+***
+
+## 📚 命令参考
+
+### ⚙️ 配置管理 (config)
 
 | 命令                   | 说明     |
 | -------------------- | ------ |
@@ -90,7 +133,8 @@ skycli object list --source aws-prod --bucket my-bucket --prefix logs/2024/
 | `skycli config test` | 测试连接   |
 | `skycli config rm`   | 删除配置   |
 
-### config add 参数
+<details>
+<summary><b>📋 config add 完整参数</b></summary>
 
 | 参数                 | 必填 | 说明                |
 | ------------------ | -- | ----------------- |
@@ -103,12 +147,17 @@ skycli object list --source aws-prod --bucket my-bucket --prefix logs/2024/
 | `--no-verify-ssl`  | 否  | 禁用 SSL 验证         |
 | `--profile`        | 否  | 配置文件名             |
 
-### config list 参数
+</details>
 
-| 参数           | 说明                    |
-| ------------ | --------------------- |
-| `--test-all` | 测试所有连接状态            |
-| `--profile`  | 指定配置文件名              |
+<details>
+<summary><b>📋 config list 完整参数</b></summary>
+
+| 参数           | 说明       |
+| ------------ | -------- |
+| `--test-all` | 测试所有连接状态 |
+| `--profile`  | 指定配置文件名  |
+
+</details>
 
 ```bash
 # 快速列出配置（不测试连接）
@@ -118,7 +167,9 @@ skycli config list
 skycli config list --test-all
 ```
 
-## 存储桶命令 (bucket)
+***
+
+## 📦 存储桶操作 (bucket)
 
 | 命令                     | 说明      |
 | ---------------------- | ------- |
@@ -143,7 +194,9 @@ skycli bucket create --source aws-prod --bucket new-bucket --region us-west-2
 skycli bucket rm --source aws-prod --bucket old-bucket --force
 ```
 
-## 对象命令 (object)
+***
+
+## 📁 对象操作 (object)
 
 | 命令                   | 说明     |
 | -------------------- | ------ |
@@ -184,7 +237,8 @@ skycli object cp \
   --preserve-acl
 ```
 
-### object list 参数
+<details>
+<summary><b>📋 object list 完整参数</b></summary>
 
 | 参数            | 说明                |
 | ------------- | ----------------- |
@@ -195,7 +249,11 @@ skycli object cp \
 | `--max-keys`  | 最大返回数量            |
 | `--output`    | 输出格式 (json/table) |
 
-## 元数据命令 (metadata)
+</details>
+
+***
+
+## 📝 元数据管理 (metadata)
 
 | 命令                    | 说明    |
 | --------------------- | ----- |
@@ -221,7 +279,9 @@ skycli metadata set --source aws-prod --bucket my-bucket \
   --operation COPY
 ```
 
-## ACL 命令 (acl)
+***
+
+## 🔐 ACL 管理 (acl)
 
 | 命令               | 说明     |
 | ---------------- | ------ |
@@ -246,9 +306,11 @@ skycli acl cp \
   --target minio-dev --target-bucket bucket2 --target-key copy.txt
 ```
 
-## 同步命令 (sync)
+***
 
-`sync` 命令统一了数据迁移和增量同步功能。通过 `--since`、`--since-last-sync` 或 `--delete` 参数可启用增量同步模式。
+## 🔄 数据同步 (sync)
+
+> `sync` 命令统一了数据迁移和增量同步功能。通过 `--since`、`--since-last-sync` 或 `--delete` 参数可启用增量同步模式。
 
 ### sync run - 执行同步/迁移
 
@@ -278,39 +340,40 @@ skycli sync run \
   --delete
 ```
 
-### 完整参数说明
+<details>
+<summary><b>📋 sync run 完整参数</b></summary>
 
-| 参数                    | 必填 | 说明                           |
-| --------------------- | -- | ---------------------------- |
-| `--source`            | 是  | 源配置名称                        |
-| `--source-bucket`     | 是  | 源存储桶                        |
-| `--source-prefix`      | 否  | 源前缀                          |
-| `--target`            | 是  | 目标配置名称                      |
-| `--target-bucket`     | 是  | 目标存储桶                       |
-| `--target-prefix`      | 否  | 目标前缀                        |
-| `--since`             | 否  | 同步指定时间之后修改的对象 (ISO格式)    |
-| `--since-last-sync`   | 否  | 同步上次同步之后修改的对象            |
-| `--delete`            | 否  | 删除目标中存在但源中已不存在的对象       |
-| `--threads`           | 否  | 并发线程数，默认 10               |
-| `--part-size`         | 否  | 分块大小(MB)，默认 8              |
-| `--storage-class`     | 否  | 目标存储类别                      |
-| `--preserve-metadata` | 否  | 保留原始元数据                     |
-| `--preserve-acl`      | 否  | 保留原始 ACL                    |
-| `--exclude`           | 否  | 排除匹配模式（支持通配符）             |
-| `--include`           | 否  | 仅包含匹配模式（支持通配符）           |
-| `--dry-run`           | 否  | 预览模式，不执行实际迁移               |
-| `--resume`            | 否  | 从断点继续                        |
-| `--profile`           | 否  | 配置文件名                       |
-| `--output`            | 否  | 输出格式 (json/table)           |
-| `--quiet`             | 否  | 静默模式                         |
+| 参数                    | 必填 | 说明                    |
+| --------------------- | -- | --------------------- |
+| `--source`            | 是  | 源配置名称                 |
+| `--source-bucket`     | 是  | 源存储桶                  |
+| `--source-prefix`     | 否  | 源前缀                   |
+| `--target`            | 是  | 目标配置名称                |
+| `--target-bucket`     | 是  | 目标存储桶                 |
+| `--target-prefix`     | 否  | 目标前缀                  |
+| `--since`             | 否  | 同步指定时间之后修改的对象 (ISO格式) |
+| `--since-last-sync`   | 否  | 同步上次同步之后修改的对象         |
+| `--delete`            | 否  | 删除目标中存在但源中已不存在的对象     |
+| `--threads`           | 否  | 并发线程数，默认 10           |
+| `--part-size`         | 否  | 分块大小(MB)，默认 8         |
+| `--storage-class`     | 否  | 目标存储类别                |
+| `--preserve-metadata` | 否  | 保留原始元数据               |
+| `--preserve-acl`      | 否  | 保留原始 ACL              |
+| `--exclude`           | 否  | 排除匹配模式（支持通配符）         |
+| `--include`           | 否  | 仅包含匹配模式（支持通配符）        |
+| `--dry-run`           | 否  | 预览模式，不执行实际迁移          |
+| `--resume`            | 否  | 从断点继续                 |
+| `--profile`           | 否  | 配置文件名                 |
+| `--output`            | 否  | 输出格式 (json/table)     |
+| `--quiet`             | 否  | 静默模式                  |
 
-### sync 子命令
+</details>
 
-| 命令               | 说明          |
-| ---------------- | ----------- |
-| `skycli sync run`    | 执行同步/迁移     |
-| `skycli sync list`   | 查看同步历史      |
-| `skycli sync status` | 查看同步状态      |
+| 命令                   | 说明      |
+| -------------------- | ------- |
+| `skycli sync run`    | 执行同步/迁移 |
+| `skycli sync list`   | 查看同步历史  |
+| `skycli sync status` | 查看同步状态  |
 
 ### 示例
 
@@ -343,15 +406,20 @@ skycli sync run \
   --part-size 16
 ```
 
-### 模式说明
+<details>
+<summary><b>📋 同步模式说明</b></summary>
 
-| 模式    | 参数组合                          | 说明                    |
-| ----- | ------------------------------ | --------------------- |
-| 迁移模式 | 无 `--since`、`--since-last-sync` | 一次性完整迁移所有对象         |
-| 增量同步 | `--since` 或 `--since-last-sync`   | 只同步指定时间/上次同步后变化的对象  |
-| 镜像模式 | `--since-last-sync --delete`       | 增量同步并删除目标中多余的对象     |
+| 模式   | 参数组合                            | 说明                 |
+| ---- | ------------------------------- | ------------------ |
+| 迁移模式 | 无 `--since`、`--since-last-sync` | 一次性完整迁移所有对象        |
+| 增量同步 | `--since` 或 `--since-last-sync` | 只同步指定时间/上次同步后变化的对象 |
+| 镜像模式 | `--since-last-sync --delete`    | 增量同步并删除目标中多余的对象    |
 
-## 校验命令 (validate)
+</details>
+
+***
+
+## ✅ 数据校验 (validate)
 
 | 命令                       | 说明     |
 | ------------------------ | ------ |
@@ -396,7 +464,8 @@ skycli validate run \
 skycli validate report --validation-id val-20240115-001
 ```
 
-### validate run 参数
+<details>
+<summary><b>📋 validate run 完整参数</b></summary>
 
 | 参数          | 说明                             |
 | ----------- | ------------------------------ |
@@ -405,16 +474,22 @@ skycli validate report --validation-id val-20240115-001
 | `--prefix`  | 对象前缀过滤                         |
 | `--threads` | 并发线程数                          |
 
-## 输出格式
+</details>
+
+***
+
+## ⚙️ 全局参数与输出格式
+
+### 📤 输出格式
 
 所有命令支持 `--output` 参数指定输出格式：
 
-```bash
---output json   # JSON 格式
---output table  # 表格格式 (默认)
-```
+| 格式      | 说明        |
+| ------- | --------- |
+| `table` | 表格格式 (默认) |
+| `json`  | JSON 格式   |
 
-## 全局参数
+### 🔧 全局参数
 
 | 参数          | 说明       |
 | ----------- | -------- |
@@ -422,11 +497,15 @@ skycli validate report --validation-id val-20240115-001
 | `--quiet`   | 静默模式     |
 | `--debug`   | 调试模式     |
 
-## 配置文件
+***
+
+## 📋 配置说明
+
+### 📁 配置文件位置
 
 配置文件位于 `~/.skycli/config.yaml`
 
-### 示例配置
+### 📝 配置示例
 
 ```yaml
 default: aws-prod
@@ -448,52 +527,70 @@ profiles:
     verify_ssl: false
 ```
 
-## 状态文件
+***
+
+## 📂 状态文件
 
 同步和校验的状态信息保存在:
 
-- 检查点: `~/.skycli/checkpoints/`
-- 同步状态: `~/.skycli/sync-state/`
-- 校验报告: `~/.skycli/validation-reports/`
+| 目录                              | 说明    |
+| ------------------------------- | ----- |
+| `~/.skycli/checkpoints/`        | 检查点文件 |
+| `~/.skycli/sync-state/`         | 同步状态  |
+| `~/.skycli/validation-reports/` | 校验报告  |
 
-## 存储类别
+***
 
-支持以下存储类别:
+## 📦 存储类别
 
-- `STANDARD` - 标准存储
-- `STANDARD_IA` - 低频访问存储
-- `GLACIER` - Glacier 归档存储
-- `DEEP_ARCHIVE` - 深度归档
-- `INTELLIGENT_TIERING` - 智能分层
+| 存储类别                  | 说明           |
+| --------------------- | ------------ |
+| `STANDARD`            | 标准存储         |
+| `STANDARD_IA`         | 低频访问存储       |
+| `GLACIER`             | Glacier 归档存储 |
+| `DEEP_ARCHIVE`        | 深度归档         |
+| `INTELLIGENT_TIERING` | 智能分层         |
 
-## 权限说明
+***
+
+## 🔐 权限说明
 
 ### Canned ACL
 
-- `private` - 私有
-- `public-read` - 公有读
-- `public-read-write` - 公有读写
-- `authenticated-read` - 认证用户读
-- `log-delivery-write` - 日志写入
+| ACL                  | 说明    |
+| -------------------- | ----- |
+| `private`            | 私有    |
+| `public-read`        | 公有读   |
+| `public-read-write`  | 公有读写  |
+| `authenticated-read` | 认证用户读 |
+| `log-delivery-write` | 日志写入  |
 
 ### 权限级别
 
-- `READ` - 读取
-- `WRITE` - 写入
-- `READ_ACP` - 读取 ACL
-- `WRITE_ACP` - 写入 ACL
-- `FULL_CONTROL` - 完全控制
+| 权限             | 说明     |
+| -------------- | ------ |
+| `READ`         | 读取     |
+| `WRITE`        | 写入     |
+| `READ_ACP`     | 读取 ACL |
+| `WRITE_ACP`    | 写入 ACL |
+| `FULL_CONTROL` | 完全控制   |
 
-## 常见问题
+***
 
-### Q: 连接失败怎么办？
+## ❓ 常见问题
+
+<details>
+<summary><b>Q: 连接失败怎么办？</b></summary>
 
 1. 检查 endpoint 是否正确
 2. 确认 access-key 和 secret-key 有效
 3. 使用 `--no-verify-ssl` 测试是否 SSL 问题
 4. 使用 `skycli config test --name xxx` 测试连接
 
-### Q: 迁移中断如何续传？
+</details>
+
+<details>
+<summary><b>Q: 迁移中断如何续传？</b></summary>
 
 ```bash
 skycli sync run \
@@ -502,7 +599,10 @@ skycli sync run \
   --resume
 ```
 
-### Q: 如何只迁移特定类型的文件？
+</details>
+
+<details>
+<summary><b>Q: 如何只迁移特定类型的文件？</b></summary>
 
 ```bash
 skycli sync run \
@@ -513,7 +613,10 @@ skycli sync run \
   --include "*.pdf"
 ```
 
-### Q: 如何排除不需要迁移的文件？
+</details>
+
+<details>
+<summary><b>Q: 如何排除不需要迁移的文件？</b></summary>
 
 ```bash
 skycli sync run \
@@ -524,9 +627,27 @@ skycli sync run \
   --exclude ".git/*"
 ```
 
-## 更新日志 (Changelog)
+</details>
 
-### v0.3.1 (2026-04-12)
+***
+
+## 📜 更新日志 (Changelog)
+
+### 🆕 v0.3.2 (2026-04-12)
+
+**README 优化**
+
+- 添加 PyPI、License、Python版本、Platform 徽章
+- 添加完整导航目录，提升文档可读性
+- 功能特性使用表格 + emoji 美化展示
+- 命令参考模块化，添加视觉分隔线
+- 参数表格使用折叠块 (`<details>`) 精简文档
+- 常见问题使用折叠块美化展示
+- 更新日志添加 emoji 标识版本类型
+- 新增贡献指南章节
+- 新增许可证章节和页脚
+
+### 🆕 v0.3.1 (2026-04-12)
 
 **版本管理优化**
 
@@ -538,7 +659,7 @@ skycli sync run \
 - 新增 `check_version.py` 版本一致性验证工具
 - 支持 `--fix` 参数自动修复版本不一致
 
-### v0.3.0 (2026-04-12)
+### 🆕 v0.3.0 (2026-04-12)
 
 **代码质量优化**
 
@@ -558,7 +679,7 @@ skycli sync run \
 - 状态管理使用 Enum 而非字符串，避免拼写错误
 - 改进类型注解，提升 IDE 支持
 
-### v0.2.3 (2026-04-12)
+### 🐛 v0.2.3 (2026-04-12)
 
 **大文件处理优化**
 
@@ -587,7 +708,7 @@ skycli sync run \
 - 添加 `logging` 模块支持，便于调试和问题排查
 - 优化 `run()` 方法中的日志输出
 
-### v0.2.2 (2026-04-12)
+### 🐛 v0.2.2 (2026-04-12)
 
 **版本管理优化**
 
@@ -601,7 +722,7 @@ skycli sync run \
 - 改进元数据复制逻辑
 - 优化并发同步性能
 
-### v0.2.0 (2026-04-11)
+### ✨ v0.2.0 (2026-04-11)
 
 **重大更新：合并 sync 和 migrate 命令**
 
@@ -622,7 +743,7 @@ skycli sync run \
 - 统一 `get_sync_history()` 函数替代原 `get_migration_history()`
 - 统一 `get_sync()` 函数替代原 `get_migration()`
 
-### v0.1.0 (2026-04-10)
+### ✨ v0.1.0 (2026-04-10)
 
 **初始版本**
 
@@ -635,6 +756,42 @@ skycli sync run \
 - 增量同步（`sync` 命令）
 - 数据校验（内容、元数据、ACL）
 
-## 许可证
+***
 
-MIT License
+## 🤝 贡献指南
+
+欢迎提交 Pull Request 或 Issue！
+
+### 开发环境搭建
+
+```bash
+# 克隆仓库
+git clone https://github.com/your-repo/skycli.git
+cd skycli
+
+# 安装开发依赖
+pip install -e ".[dev]"
+
+# 运行测试
+pytest tests/
+```
+
+### 代码规范
+
+- 遵循 PEP 8 代码规范
+- 使用 type hints 标注类型
+- 提交前运行 `check_version.py` 确保版本一致性
+
+***
+
+## 📄 许可证
+
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
+MIT License - 详见 [LICENSE](LICENSE) 文件
+
+***
+
+<p align="center">
+  <sub>Made with ❤️ by SkyCLI Team</sub>
+</p>
