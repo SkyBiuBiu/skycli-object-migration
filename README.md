@@ -633,6 +633,15 @@ skycli sync run \
 
 ## 📜 更新日志 (Changelog)
 
+### 🆕 v0.3.6 (2026-04-12)
+
+**代码质量改进**
+
+- 新增 `constants.py`，将硬编码状态消息提取为常量
+- `skycli.py` 中的状态消息改用常量引用
+- 为 `skyclient.py` 的 `_create_client()` / `_create_resource()` 添加 docstrings
+- 为 `skyconfig.py` 的配置管理方法添加 docstrings
+
 ### 🆕 v0.3.5 (2026-04-12)
 
 **新增测试**

@@ -26,6 +26,16 @@ class SkyClient:
         self._resource = self._create_resource()
 
     def _create_client(self):
+        """Create and configure boto3 S3 client.
+
+        Returns:
+            boto3.client: Configured S3 client with:
+                - Signature version: s3v4
+                - Addressing style: path or virtual (based on use_path_style)
+                - Retry mode: standard with 3 max attempts
+                - Connect timeout: 5 seconds
+                - Read timeout: 10 seconds
+        """
         config = Config(
             region_name=self.region,
             signature_version="s3v4",
@@ -46,6 +56,15 @@ class SkyClient:
         )
 
     def _create_resource(self):
+        """Create and configure boto3 S3 resource.
+
+        Returns:
+            boto3.resource: Configured S3 resource with:
+                - Signature version: s3v4
+                - Addressing style: path or virtual (based on use_path_style)
+                - Connect timeout: 5 seconds
+                - Read timeout: 10 seconds
+        """
         config = Config(
             region_name=self.region,
             signature_version="s3v4",

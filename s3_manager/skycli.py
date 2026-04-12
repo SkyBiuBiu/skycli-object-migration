@@ -11,6 +11,7 @@ from .skysync import create_sync, get_sync, get_sync_history
 from .skyvalidate import create_validation, get_validation_report, list_validation_reports
 from .skyreport import ReportGenerator
 from ._version import __version__
+from .constants import STATUS_SUCCESS, STATUS_CONNECTION_FAILED, STATUS_ERROR, STATUS_FAILED
 
 
 def get_client(config_name: str, profile: Optional[str] = None) -> SkyClient:
@@ -91,13 +92,13 @@ def cmd_config_list(args):
     
     for name, endpoint, region, success, error in sorted(results):
         if success:
-            status = '✓ 成功'
+            status = STATUS_SUCCESS
         elif error and "Connection" in error:
-            status = '✗ 连接失败'
+            status = STATUS_CONNECTION_FAILED
         elif error:
-            status = f'✗ 错误'
+            status = STATUS_ERROR
         else:
-            status = '✗ 失败'
+            status = STATUS_FAILED
         print(f"{name:<20} {endpoint:<40} {region:<15} {status}")
 
 

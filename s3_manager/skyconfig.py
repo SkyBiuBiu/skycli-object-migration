@@ -36,6 +36,11 @@ class SkyConfig:
             self.config_dir.mkdir(parents=True, exist_ok=True)
 
     def _start_watching(self):
+        """Start file system observer to monitor config file changes.
+
+        Uses watchdog to watch for modifications to the config file
+        and automatically reloads configuration when changes are detected.
+        """
         try:
             event_handler = ConfigFileHandler(self)
             self._observer = Observer()
@@ -45,11 +50,21 @@ class SkyConfig:
             pass
 
     def _stop_watching(self):
+        """Stop the file system observer.
+
+        Should be called during cleanup or when configuration watching
+        is no longer needed.
+        """
         if self._observer:
             self._observer.stop()
             self._observer.join()
 
     def _load_config(self):
+        """Load configuration from YAML file.
+
+        Thread-safe method that acquires a lock before reading
+        the config file and parsing YAML content.
+        """
         with self._config_lock:
             if not self.config_file.exists():
                 return
@@ -64,6 +79,11 @@ class SkyConfig:
                 pass
 
     def _save_config(self):
+        """Save configuration to YAML file.
+
+        Thread-safe method that acquires a lock before writing
+        the current configuration state to the config file.
+        """
         with self._config_lock:
             config = {
                 "profiles": self.profiles,
