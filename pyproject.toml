@@ -32,6 +32,8 @@ dependencies = [
 test = [
     "pytest>=7.0.0",
     "pytest-mock>=3.10.0",
+    "moto[s3]>=5.0.0",
+    "responses>=0.23.0",
 ]
 
 [project.scripts]

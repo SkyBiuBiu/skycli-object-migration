@@ -633,6 +633,28 @@ skycli sync run \
 
 ## 📜 更新日志 (Changelog)
 
+### 🆕 v0.4.1 (2026-04-12)
+
+**测试基础设施**
+
+- 引入 `moto[s3]` 5.x 进行 S3 功能测试，无需真实 AWS 环境
+- 实现双模式测试架构：支持 Moto Mock 和真实 S3 两种测试模式
+- 新增 `tests/test_skyclient_moto.py` 包含 12 个完整的 Moto 测试用例
+- 更新 `tests/conftest.py` 添加 `moto_mock` fixture 和环境变量控制
+- 创建 `pytest.ini` 配置文件，支持测试标记和过滤
+- 所有 123 个测试通过，保持 100% 测试覆盖率
+
+**功能改进**
+
+- 修复 `SkyClient.create_bucket()` 方法自动使用实例 region 参数
+- 解决 Moto 5 与 boto3 在 `us-east-1` region 的兼容性问题
+- 优化测试配置管理，支持通过 `.env` 文件切换测试模式
+
+**依赖更新**
+
+- 新增 `moto[s3]>=5.0.0` 和 `responses>=0.23.0` 作为测试依赖
+- 更新 `pyproject.toml` 和 `requirements.txt`
+
 ### 🆕 v0.4.0 (2026-04-12)
 
 **国际化 (i18n) 支持**

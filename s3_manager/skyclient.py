@@ -369,9 +369,21 @@ class SkyClient:
         self._client.put_object_acl(**kwargs)
 
     def create_bucket(self, bucket: str, region: Optional[str] = None):
+        """Create an S3 bucket.
+        
+        Args:
+            bucket: The name of the bucket
+            region: The region to create the bucket in. If not provided, uses self.region.
+                   For us-east-1, no LocationConstraint is needed.
+        """
         kwargs = {"Bucket": bucket}
-        if region and region != "us-east-1":
-            kwargs["CreateBucketConfiguration"] = {"LocationConstraint": region}
+        # Use instance region if not provided
+        bucket_region = region or self.region
+        
+        # Only add LocationConstraint for regions other than us-east-1
+        if bucket_region and bucket_region != "us-east-1":
+            kwargs["CreateBucketConfiguration"] = {"LocationConstraint": bucket_region}
+        
         self._client.create_bucket(**kwargs)
 
     def delete_bucket(self, bucket: str):
