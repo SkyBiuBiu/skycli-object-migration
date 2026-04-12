@@ -633,6 +633,29 @@ skycli sync run \
 
 ## 📜 更新日志 (Changelog)
 
+### 🆕 v0.4.2 (2026-04-13)
+
+**覆盖率测试**
+
+- 引入 `pytest-cov>=4.0.0` 进行代码覆盖率测试
+- 配置覆盖率目标为 80%，支持 HTML 可视化报告
+- 生成 HTML 覆盖率报告到 `htmlcov/` 目录
+
+**测试用例扩充**
+
+- 新增 `test_skyvalidate.py`: 10 个测试用例 (覆盖率 25%→80%)
+- 新增 `test_skysync.py`: 23 个测试用例
+- 新增 `test_skymetadata.py`: 12 个测试用例
+- 新增 `test_skyacl.py`: 14 个测试用例
+- 总测试数：152 passed, 3 skipped
+
+**覆盖率提升**
+
+- 总体覆盖率：55%→60% (+5%)
+- skyvalidate.py: 25%→80% (+55%)
+- skymetadata.py: 46%→52% (+6%)
+- skyacl.py: 37%→39% (+2%)
+
 ### 🆕 v0.4.1 (2026-04-12)
 
 **测试基础设施**
