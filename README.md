@@ -526,6 +526,18 @@ skycli sync run \
 
 ## 更新日志 (Changelog)
 
+### v0.3.1 (2026-04-12)
+
+**版本管理优化**
+
+- 符合 PEP 621 标准的 `pyproject.toml` 配置
+- 统一版本管理：单一事实源设计
+- `pyproject.toml` 使用动态版本声明，从 `_version.py` 读取
+- `setup.py` 通过 `get_version()` 从 `_version.py` 读取
+- 新增 `update_version.py` 自动化版本更新脚本
+- 新增 `check_version.py` 版本一致性验证工具
+- 支持 `--fix` 参数自动修复版本不一致
+
 ### v0.3.0 (2026-04-12)
 
 **代码质量优化**

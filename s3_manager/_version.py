@@ -2,13 +2,7 @@
 SkyCLI version management module
 """
 
-__version__ = "0.3.0"
-VERSION_INFO = {
-    "major": 0,
-    "minor": 3,
-    "patch": 0,
-    "release": True
-}
+__version__ = "0.3.1"
 
 
 def get_version():
@@ -17,5 +11,11 @@ def get_version():
 
 
 def get_version_info():
-    """Get the version info dictionary"""
-    return VERSION_INFO
+    """Get the version info dictionary by parsing __version__"""
+    parts = __version__.split('.')
+    return {
+        "major": int(parts[0]),
+        "minor": int(parts[1]),
+        "patch": int(parts[2]) if len(parts) > 2 else 0,
+        "release": True
+    }
