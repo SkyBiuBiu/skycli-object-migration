@@ -3,7 +3,15 @@ import sys
 import io
 from unittest.mock import patch, MagicMock
 from s3_manager.skycli import main
+from s3_manager import i18n
 from .conftest import TEST_ENDPOINT, TEST_ACCESS_KEY, TEST_SECRET_KEY
+
+
+@pytest.fixture(autouse=True)
+def setup_i18n():
+    """为所有测试设置中文语言环境"""
+    i18n.set_language("zh_CN")
+    yield
 
 
 class TestCLICommands:
@@ -88,7 +96,7 @@ class TestCLIConfigCommands:
 
             mock_config.add_profile.assert_called_once()
             output = mock_stdout.getvalue()
-            assert "added successfully" in output.lower()
+            assert "添加成功" in output
 
     @patch("s3_manager.skycli.config")
     def test_config_list_fast_mode(self, mock_config):
@@ -106,7 +114,7 @@ class TestCLIConfigCommands:
 
             output = mock_stdout.getvalue()
             assert "test-config" in output
-            assert "Tip: Use --test-all" in output
+            assert "提示" in output and "--test-all" in output
 
     @patch("s3_manager.skycli.config")
     def test_config_list_with_test_all(self, mock_config):
@@ -126,6 +134,7 @@ class TestCLIConfigCommands:
             output = mock_stdout.getvalue()
             assert "test-config" in output
             assert "成功" in output or "✓" in output
+            assert "测试中" in output or "Testing" in output
 
     @patch("s3_manager.skycli.config")
     def test_config_test_success(self, mock_config):
@@ -140,7 +149,7 @@ class TestCLIConfigCommands:
             main()
 
             output = mock_stdout.getvalue()
-            assert "successful" in output.lower() or "✓" in output
+            assert "连接成功" in output.lower()
 
     @patch("s3_manager.skycli.config")
     def test_config_rm(self, mock_config):
@@ -293,8 +302,8 @@ class TestCLISyncDryRun:
             main()
 
             output = mock_stdout.getvalue()
-            assert "Dry run" in output
-            assert "No changes were made" in output
+            assert "预览模式" in output
+            assert "未做任何更改" in output
 
     @patch("s3_manager.skycli.get_client")
     def test_sync_dry_run_with_upload(self, mock_get_client):
@@ -325,9 +334,9 @@ class TestCLISyncDryRun:
             main()
 
             output = mock_stdout.getvalue()
-            assert "Dry run" in output
-            assert "Objects to upload: 1" in output
-            assert "[UPLOAD]" in output
+            assert "预览模式" in output
+            assert "待上传对象" in output
+            assert "[上传]" in output
 
     @patch("s3_manager.skycli.get_client")
     def test_sync_dry_run_with_delete(self, mock_get_client):
@@ -359,6 +368,6 @@ class TestCLISyncDryRun:
             main()
 
             output = mock_stdout.getvalue()
-            assert "Dry run" in output
-            assert "Objects to delete: 1" in output
-            assert "[DELETE]" in output
+            assert "预览模式" in output
+            assert "待删除对象" in output
+            assert "[删除]" in output

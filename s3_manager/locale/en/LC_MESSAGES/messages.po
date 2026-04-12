@@ -1,0 +1,502 @@
+# English translations for SkyCLI
+# This file serves as the fallback when no translation is found
+
+msgid ""
+msgstr ""
+"Language: en\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+
+msgid "Config '{name}' added successfully"
+msgstr "Config '{name}' added successfully"
+
+msgid "Config '{name}' removed"
+msgstr "Config '{name}' removed"
+
+msgid "Config '{name}' not found"
+msgstr "Config '{name}' not found"
+
+msgid "No configs found"
+msgstr "No configs found"
+
+msgid "Connection successful"
+msgstr "Connection successful"
+
+msgid "Connection failed: {error}"
+msgstr "Connection failed: {error}"
+
+msgid "Region: {region}"
+msgstr "Region: {region}"
+
+msgid "Bucket count: {count}"
+msgstr "Bucket count: {count}"
+
+msgid "Tip: Use --test-all to test connection status"
+msgstr "Tip: Use --test-all to test connection status"
+
+msgid "Testing: {completed}/{total}..."
+msgstr "Testing: {completed}/{total}..."
+
+msgid "NAME"
+msgstr "NAME"
+
+msgid "ENDPOINT"
+msgstr "ENDPOINT"
+
+msgid "REGION"
+msgstr "REGION"
+
+msgid "STATUS"
+msgstr "STATUS"
+
+msgid "BUCKET NAME"
+msgstr "BUCKET NAME"
+
+msgid "CREATION DATE"
+msgstr "CREATION DATE"
+
+msgid "OBJECTS"
+msgstr "OBJECTS"
+
+msgid "KEY"
+msgstr "KEY"
+
+msgid "LAST MODIFIED"
+msgstr "LAST MODIFIED"
+
+msgid "SIZE"
+msgstr "SIZE"
+
+msgid "Bucket '{bucket}' created"
+msgstr "Bucket '{bucket}' created"
+
+msgid "Bucket '{bucket}' deleted"
+msgstr "Bucket '{bucket}' deleted"
+
+msgid "Region: {location}"
+msgstr "Region: {location}"
+
+msgid "Versioning: {status}"
+msgstr "Versioning: {status}"
+
+msgid "Policy: Configured"
+msgstr "Policy: Configured"
+
+msgid "Cancelled"
+msgstr "Cancelled"
+
+msgid "Object '{key}' uploaded, ETag: {etag}"
+msgstr "Object '{key}' uploaded, ETag: {etag}"
+
+msgid "Object '{key}' downloaded to '{file}'"
+msgstr "Object '{key}' downloaded to '{file}'"
+
+msgid "Object '{key}' deleted"
+msgstr "Object '{key}' deleted"
+
+msgid "Object copied, ETag: {etag}"
+msgstr "Object copied, ETag: {etag}"
+
+msgid "Object: {key}"
+msgstr "Object: {key}"
+
+msgid "Bucket: {bucket}"
+msgstr "Bucket: {bucket}"
+
+msgid "Size: {size}"
+msgstr "Size: {size}"
+
+msgid "Last Modified: {time}"
+msgstr "Last Modified: {time}"
+
+msgid "ETag: {etag}"
+msgstr "ETag: {etag}"
+
+msgid "Storage Class: {class_}"
+msgstr "Storage Class: {class_}"
+
+msgid "Metadata:"
+msgstr "Metadata:"
+
+msgid "ACL:"
+msgstr "ACL:"
+
+msgid "Metadata for '{key}':"
+msgstr "Metadata for '{key}':"
+
+msgid "Metadata updated for '{key}'"
+msgstr "Metadata updated for '{key}'"
+
+msgid "ACL set for '{key}'"
+msgstr "ACL set for '{key}'"
+
+msgid "ACL copied from '{source_key}' to '{target_key}'"
+msgstr "ACL copied from '{source_key}' to '{target_key}'"
+
+msgid "Starting migration..."
+msgstr "Starting migration..."
+
+msgid "Starting sync..."
+msgstr "Starting sync..."
+
+msgid "Progress: {processed}/{total} ({pct:.1f}%) Failed: {failed}"
+msgstr "Progress: {processed}/{total} ({pct:.1f}%) Failed: {failed}"
+
+msgid "No sync history found"
+msgstr "No sync history found"
+
+msgid "{id}: {status} - {source} -> {target}"
+msgstr "{id}: {status} - {source} -> {target}"
+
+msgid "Sync '{id}' not found"
+msgstr "Sync '{id}' not found"
+
+msgid "Dry run - {mode} simulation"
+msgstr "Dry run - {mode} simulation"
+
+msgid "Source: {source}/{bucket}/{prefix}"
+msgstr "Source: {source}/{bucket}/{prefix}"
+
+msgid "Target: {target}/{bucket}/{prefix}"
+msgstr "Target: {target}/{bucket}/{prefix}"
+
+msgid "Objects to upload: {count}"
+msgstr "Objects to upload: {count}"
+
+msgid "Objects to delete: {count}"
+msgstr "Objects to delete: {count}"
+
+msgid "Objects to skip: {count}"
+msgstr "Objects to skip: {count}"
+
+msgid "--- Upload list (first 10) ---"
+msgstr "--- Upload list (first 10) ---"
+
+msgid "--- Delete list (first 10) ---"
+msgstr "--- Delete list (first 10) ---"
+
+msgid "--- Skip list (first 10) ---"
+msgstr "--- Skip list (first 10) ---"
+
+msgid "[UPLOAD] {key}"
+msgstr "[UPLOAD] {key}"
+
+msgid "[DELETE] {key}"
+msgstr "[DELETE] {key}"
+
+msgid "[SKIP] {key}"
+msgstr "[SKIP] {key}"
+
+msgid "... and {count} more"
+msgstr "... and {count} more"
+
+msgid "Dry run completed. No changes were made."
+msgstr "Dry run completed. No changes were made."
+
+msgid "Starting {mode}..."
+msgstr "Starting {mode}..."
+
+msgid "Progress: {processed}/{total} ({pct:.1f}%) Uploaded: {uploaded}, Deleted: {deleted}, Skipped: {skipped}, Failed: {failed}"
+msgstr "Progress: {processed}/{total} ({pct:.1f}%) Uploaded: {uploaded}, Deleted: {deleted}, Skipped: {skipped}, Failed: {failed}"
+
+msgid "Validating: {processed}/{total}, failed={failed}"
+msgstr "Validating: {processed}/{total}, failed={failed}"
+
+msgid "No validation reports found"
+msgstr "No validation reports found"
+
+msgid "Report '{id}' not found"
+msgstr "Report '{id}' not found"
+
+msgid "{id}: {timestamp} - {status}"
+msgstr "{id}: {timestamp} - {status}"
+
+msgid "Error: {error}"
+msgstr "Error: {error}"
+
+msgid "Current language: {lang}"
+msgstr "Current language: {lang}"
+
+msgid "Language set to: {lang}"
+msgstr "Language set to: {lang}"
+
+msgid "Language setting is stored in profile"
+msgstr "Language setting is stored in profile"
+
+msgid "S3 Compatible Object Storage Manager"
+msgstr "S3 Compatible Object Storage Manager"
+
+msgid "Available commands"
+msgstr "Available commands"
+
+msgid "Config profile name"
+msgstr "Config profile name"
+
+msgid "Output format"
+msgstr "Output format"
+
+msgid "Quiet mode"
+msgstr "Quiet mode"
+
+msgid "Config management"
+msgstr "Config management"
+
+msgid "Add config"
+msgstr "Add config"
+
+msgid "Config name"
+msgstr "Config name"
+
+msgid "S3 endpoint URL"
+msgstr "S3 endpoint URL"
+
+msgid "Access key"
+msgstr "Access key"
+
+msgid "Secret key"
+msgstr "Secret key"
+
+msgid "Region"
+msgstr "Region"
+
+msgid "Use path style"
+msgstr "Use path style"
+
+msgid "Disable SSL verification"
+msgstr "Disable SSL verification"
+
+msgid "Language"
+msgstr "Language"
+
+msgid "List configs"
+msgstr "List configs"
+
+msgid "Test all connections (slower)"
+msgstr "Test all connections (slower)"
+
+msgid "Test connection"
+msgstr "Test connection"
+
+msgid "Remove config"
+msgstr "Remove config"
+
+msgid "Language settings"
+msgstr "Language settings"
+
+msgid "Language code"
+msgstr "Language code"
+
+msgid "Show language settings"
+msgstr "Show language settings"
+
+msgid "Bucket operations"
+msgstr "Bucket operations"
+
+msgid "List buckets"
+msgstr "List buckets"
+
+msgid "Bucket info"
+msgstr "Bucket info"
+
+msgid "Bucket name"
+msgstr "Bucket name"
+
+msgid "Create bucket"
+msgstr "Create bucket"
+
+msgid "Delete bucket"
+msgstr "Delete bucket"
+
+msgid "Force delete"
+msgstr "Force delete"
+
+msgid "Object operations"
+msgstr "Object operations"
+
+msgid "List objects"
+msgstr "List objects"
+
+msgid "Prefix filter"
+msgstr "Prefix filter"
+
+msgid "Delimiter"
+msgstr "Delimiter"
+
+msgid "Max keys"
+msgstr "Max keys"
+
+msgid "Upload object"
+msgstr "Upload object"
+
+msgid "Object key"
+msgstr "Object key"
+
+msgid "Local file path"
+msgstr "Local file path"
+
+msgid "Content type"
+msgstr "Content type"
+
+msgid "Metadata key=value"
+msgstr "Metadata key=value"
+
+msgid "Storage class"
+msgstr "Storage class"
+
+msgid "ACL"
+msgstr "ACL"
+
+msgid "Download object"
+msgstr "Download object"
+
+msgid "Delete object"
+msgstr "Delete object"
+
+msgid "Version ID"
+msgstr "Version ID"
+
+msgid "Object info"
+msgstr "Object info"
+
+msgid "Include metadata"
+msgstr "Include metadata"
+
+msgid "Include ACL"
+msgstr "Include ACL"
+
+msgid "Copy object"
+msgstr "Copy object"
+
+msgid "Source config name"
+msgstr "Source config name"
+
+msgid "Source bucket"
+msgstr "Source bucket"
+
+msgid "Source key"
+msgstr "Source key"
+
+msgid "Target config name"
+msgstr "Target config name"
+
+msgid "Target bucket"
+msgstr "Target bucket"
+
+msgid "Target key"
+msgstr "Target key"
+
+msgid "Preserve metadata"
+msgstr "Preserve metadata"
+
+msgid "Preserve ACL"
+msgstr "Preserve ACL"
+
+msgid "Metadata operations"
+msgstr "Metadata operations"
+
+msgid "Get metadata"
+msgstr "Get metadata"
+
+msgid "Set metadata"
+msgstr "Set metadata"
+
+msgid "Metadata operations"
+msgstr "Metadata operations"
+
+msgid "Get metadata"
+msgstr "Get metadata"
+
+msgid "Set metadata"
+msgstr "Set metadata"
+
+msgid "ACL operations"
+msgstr "ACL operations"
+
+msgid "Get ACL"
+msgstr "Get ACL"
+
+msgid "Set ACL"
+msgstr "Set ACL"
+
+msgid "Canned ACL"
+msgstr "Canned ACL"
+
+msgid "Grant read"
+msgstr "Grant read"
+
+msgid "Grant full control"
+msgstr "Grant full control"
+
+msgid "Copy ACL"
+msgstr "Copy ACL"
+
+msgid "Sync/Migration operations"
+msgstr "Sync/Migration operations"
+
+msgid "Run sync/migration"
+msgstr "Run sync/migration"
+
+msgid "Source prefix"
+msgstr "Source prefix"
+
+msgid "Target prefix"
+msgstr "Target prefix"
+
+msgid "Sync since (ISO format)"
+msgstr "Sync since (ISO format)"
+
+msgid "Sync since last sync"
+msgstr "Sync since last sync"
+
+msgid "Delete objects not in source (sync mode)"
+msgstr "Delete objects not in source (sync mode)"
+
+msgid "Threads"
+msgstr "Threads"
+
+msgid "Part size (MB)"
+msgstr "Part size (MB)"
+
+msgid "Exclude patterns"
+msgstr "Exclude patterns"
+
+msgid "Include patterns"
+msgstr "Include patterns"
+
+msgid "Dry run"
+msgstr "Dry run"
+
+msgid "Resume migration"
+msgstr "Resume migration"
+
+msgid "List sync/migration history"
+msgstr "List sync/migration history"
+
+msgid "Limit"
+msgstr "Limit"
+
+msgid "Sync/migration status"
+msgstr "Sync/migration status"
+
+msgid "Migration ID"
+msgstr "Migration ID"
+
+msgid "Validation operations"
+msgstr "Validation operations"
+
+msgid "Run validation"
+msgstr "Run validation"
+
+msgid "What to check"
+msgstr "What to check"
+
+msgid "Metadata fields to check (comma-separated)"
+msgstr "Metadata fields to check (comma-separated)"
+
+msgid "Show validation report"
+msgstr "Show validation report"
+
+msgid "Validation ID"
+msgstr "Validation ID"
+
+msgid "List validation reports"
+msgstr "List validation reports"

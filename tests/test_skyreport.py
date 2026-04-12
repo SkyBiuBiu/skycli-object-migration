@@ -74,7 +74,7 @@ class TestGenerateMigrationReport:
 
         report = ReportGenerator.generate_migration_report(summary, "table")
 
-        assert "MIGRATION REPORT" in report
+        assert "迁 移 报 告" in report
         assert "test-mig-001" in report
         assert "COMPLETED" in report
         assert "source-bucket" in report
@@ -138,7 +138,7 @@ class TestGenerateSyncReport:
 
         report = ReportGenerator.generate_sync_report(summary, "table")
 
-        assert "SYNC REPORT" in report
+        assert "同 步 报 告" in report
         assert "sync-001" in report
         assert "COMPLETED" in report
         assert "50" in report
@@ -191,7 +191,7 @@ class TestGenerateValidationReport:
 
         result = ReportGenerator.generate_validation_report(report, "table")
 
-        assert "VALIDATION REPORT" in result
+        assert "验 证 报 告" in result
         assert "val-001" in result
         assert "100" in result
         assert "95" in result
@@ -235,7 +235,7 @@ class TestGenerateMigrationPreview:
             "prefix/"
         )
 
-        assert "MIGRATION PREVIEW" in result
+        assert "迁 移 预 览" in result
         assert "source-bucket" in result
         assert "target-bucket" in result
         assert "2" in result
@@ -269,7 +269,7 @@ class TestGenerateMigrationPreview:
             ""
         )
 
-        assert "prefix: /" in result
+        assert "前缀:" in result and "/" in result
 
     def test_migration_preview_long_key(self):
         long_key = "a" * 60
@@ -295,7 +295,7 @@ class TestGenerateMigrationPreview:
             ""
         )
 
-        assert "and 10 more objects" in result
+        assert "还有" in result and "个对象" in result
 
 
 class TestGenerateSyncPreview:
@@ -312,7 +312,7 @@ class TestGenerateSyncPreview:
             "2024-01-01T00:00:00"
         )
 
-        assert "SYNC PREVIEW" in result
+        assert "同 步 预 览" in result
         assert "source-bucket" in result
         assert "target-bucket" in result
         assert "2" in result

@@ -1,0 +1,492 @@
+# Simplified Chinese translations for SkyCLI
+
+msgid ""
+msgstr ""
+"Language: zh_CN\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+
+msgid "Config '{name}' added successfully"
+msgstr "配置 '{name}' 添加成功"
+
+msgid "Config '{name}' removed"
+msgstr "配置 '{name}' 已删除"
+
+msgid "Config '{name}' not found"
+msgstr "配置 '{name}' 不存在"
+
+msgid "No configs found"
+msgstr "未找到配置"
+
+msgid "Connection successful"
+msgstr "连接成功"
+
+msgid "Connection failed: {error}"
+msgstr "连接失败: {error}"
+
+msgid "Region: {region}"
+msgstr "区域: {region}"
+
+msgid "Bucket count: {count}"
+msgstr "存储桶数量: {count}"
+
+msgid "Tip: Use --test-all to test connection status"
+msgstr "提示：使用 --test-all 测试连接状态"
+
+msgid "Testing: {completed}/{total}..."
+msgstr "测试中：{completed}/{total}..."
+
+msgid "NAME"
+msgstr "名称"
+
+msgid "ENDPOINT"
+msgstr "端点"
+
+msgid "REGION"
+msgstr "区域"
+
+msgid "STATUS"
+msgstr "状态"
+
+msgid "BUCKET NAME"
+msgstr "存储桶名称"
+
+msgid "CREATION DATE"
+msgstr "创建时间"
+
+msgid "OBJECTS"
+msgstr "对象数"
+
+msgid "KEY"
+msgstr "键"
+
+msgid "LAST MODIFIED"
+msgstr "最后修改时间"
+
+msgid "SIZE"
+msgstr "大小"
+
+msgid "Bucket '{bucket}' created"
+msgstr "存储桶 '{bucket}' 已创建"
+
+msgid "Bucket '{bucket}' deleted"
+msgstr "存储桶 '{bucket}' 已删除"
+
+msgid "Region: {location}"
+msgstr "区域: {location}"
+
+msgid "Versioning: {status}"
+msgstr "版本控制: {status}"
+
+msgid "Policy: Configured"
+msgstr "策略: 已配置"
+
+msgid "Cancelled"
+msgstr "已取消"
+
+msgid "Object '{key}' uploaded, ETag: {etag}"
+msgstr "对象 '{key}' 已上传, ETag: {etag}"
+
+msgid "Object '{key}' downloaded to '{file}'"
+msgstr "对象 '{key}' 已下载到 '{file}'"
+
+msgid "Object '{key}' deleted"
+msgstr "对象 '{key}' 已删除"
+
+msgid "Object copied, ETag: {etag}"
+msgstr "对象已复制, ETag: {etag}"
+
+msgid "Object: {key}"
+msgstr "对象: {key}"
+
+msgid "Bucket: {bucket}"
+msgstr "存储桶: {bucket}"
+
+msgid "Size: {size}"
+msgstr "大小: {size}"
+
+msgid "Last Modified: {time}"
+msgstr "最后修改: {time}"
+
+msgid "ETag: {etag}"
+msgstr "ETag: {etag}"
+
+msgid "Storage Class: {class_}"
+msgstr "存储类别: {class_}"
+
+msgid "Metadata:"
+msgstr "元数据:"
+
+msgid "ACL:"
+msgstr "ACL:"
+
+msgid "Metadata for '{key}':"
+msgstr "对象 '{key}' 的元数据:"
+
+msgid "Metadata updated for '{key}'"
+msgstr "对象 '{key}' 的元数据已更新"
+
+msgid "ACL set for '{key}'"
+msgstr "对象 '{key}' 的 ACL 已设置"
+
+msgid "ACL copied from '{source_key}' to '{target_key}'"
+msgstr "ACL 已从 '{source_key}' 复制到 '{target_key}'"
+
+msgid "Starting migration..."
+msgstr "开始迁移..."
+
+msgid "Starting sync..."
+msgstr "开始同步..."
+
+msgid "Progress: {processed}/{total} ({pct:.1f}%) Failed: {failed}"
+msgstr "进度: {processed}/{total} ({pct:.1f}%) 失败: {failed}"
+
+msgid "No sync history found"
+msgstr "未找到同步历史"
+
+msgid "{id}: {status} - {source} -> {target}"
+msgstr "{id}: {status} - {source} -> {target}"
+
+msgid "Sync '{id}' not found"
+msgstr "未找到同步任务 '{id}'"
+
+msgid "Dry run - {mode} simulation"
+msgstr "预览模式 - {mode} 模拟"
+
+msgid "Source: {source}/{bucket}/{prefix}"
+msgstr "源: {source}/{bucket}/{prefix}"
+
+msgid "Target: {target}/{bucket}/{prefix}"
+msgstr "目标: {target}/{bucket}/{prefix}"
+
+msgid "Objects to upload: {count}"
+msgstr "待上传对象: {count}"
+
+msgid "Objects to delete: {count}"
+msgstr "待删除对象: {count}"
+
+msgid "Objects to skip: {count}"
+msgstr "待跳过对象: {count}"
+
+msgid "--- Upload list (first 10) ---"
+msgstr "--- 待上传列表 (前10个) ---"
+
+msgid "--- Delete list (first 10) ---"
+msgstr "--- 待删除列表 (前10个) ---"
+
+msgid "--- Skip list (first 10) ---"
+msgstr "--- 待跳过列表 (前10个) ---"
+
+msgid "[UPLOAD] {key}"
+msgstr "[上传] {key}"
+
+msgid "[DELETE] {key}"
+msgstr "[删除] {key}"
+
+msgid "[SKIP] {key}"
+msgstr "[跳过] {key}"
+
+msgid "... and {count} more"
+msgstr "... 还有 {count} 个"
+
+msgid "Dry run completed. No changes were made."
+msgstr "预览完成，未做任何更改"
+
+msgid "Starting {mode}..."
+msgstr "开始 {mode}..."
+
+msgid "Progress: {processed}/{total} ({pct:.1f}%) Uploaded: {uploaded}, Deleted: {deleted}, Skipped: {skipped}, Failed: {failed}"
+msgstr "进度: {processed}/{total} ({pct:.1f}%) 已上传: {uploaded}, 已删除: {deleted}, 已跳过: {skipped}, 失败: {failed}"
+
+msgid "Validating: {processed}/{total}, failed={failed}"
+msgstr "校验中: {processed}/{total}, 失败={failed}"
+
+msgid "No validation reports found"
+msgstr "未找到校验报告"
+
+msgid "Report '{id}' not found"
+msgstr "未找到报告 '{id}'"
+
+msgid "{id}: {timestamp} - {status}"
+msgstr "{id}: {timestamp} - {status}"
+
+msgid "Error: {error}"
+msgstr "错误: {error}"
+
+msgid "Current language: {lang}"
+msgstr "当前语言: {lang}"
+
+msgid "Language set to: {lang}"
+msgstr "语言已设置为: {lang}"
+
+msgid "Language setting is stored in profile"
+msgstr "语言设置存储在配置文件中"
+
+msgid "S3 Compatible Object Storage Manager"
+msgstr "S3 兼容对象存储管理器"
+
+msgid "Available commands"
+msgstr "可用命令"
+
+msgid "Config profile name"
+msgstr "配置profile名称"
+
+msgid "Output format"
+msgstr "输出格式"
+
+msgid "Quiet mode"
+msgstr "静默模式"
+
+msgid "Config management"
+msgstr "配置管理"
+
+msgid "Add config"
+msgstr "添加配置"
+
+msgid "Config name"
+msgstr "配置名称"
+
+msgid "S3 endpoint URL"
+msgstr "S3 端点 URL"
+
+msgid "Access key"
+msgstr "访问密钥"
+
+msgid "Secret key"
+msgstr "秘密密钥"
+
+msgid "Region"
+msgstr "区域"
+
+msgid "Use path style"
+msgstr "使用路径样式"
+
+msgid "Disable SSL verification"
+msgstr "禁用 SSL 验证"
+
+msgid "Language"
+msgstr "语言"
+
+msgid "List configs"
+msgstr "列出配置"
+
+msgid "Test all connections (slower)"
+msgstr "测试所有连接 (较慢)"
+
+msgid "Test connection"
+msgstr "测试连接"
+
+msgid "Remove config"
+msgstr "删除配置"
+
+msgid "Language settings"
+msgstr "语言设置"
+
+msgid "Language code"
+msgstr "语言代码"
+
+msgid "Show language settings"
+msgstr "显示语言设置"
+
+msgid "Bucket operations"
+msgstr "存储桶操作"
+
+msgid "List buckets"
+msgstr "列出存储桶"
+
+msgid "Bucket info"
+msgstr "存储桶信息"
+
+msgid "Bucket name"
+msgstr "存储桶名称"
+
+msgid "Create bucket"
+msgstr "创建存储桶"
+
+msgid "Delete bucket"
+msgstr "删除存储桶"
+
+msgid "Force delete"
+msgstr "强制删除"
+
+msgid "Object operations"
+msgstr "对象操作"
+
+msgid "List objects"
+msgstr "列出对象"
+
+msgid "Prefix filter"
+msgstr "前缀过滤"
+
+msgid "Delimiter"
+msgstr "分隔符"
+
+msgid "Max keys"
+msgstr "最大键数"
+
+msgid "Upload object"
+msgstr "上传对象"
+
+msgid "Object key"
+msgstr "对象键"
+
+msgid "Local file path"
+msgstr "本地文件路径"
+
+msgid "Content type"
+msgstr "内容类型"
+
+msgid "Metadata key=value"
+msgstr "元数据 键=值"
+
+msgid "Storage class"
+msgstr "存储类别"
+
+msgid "ACL"
+msgstr "ACL"
+
+msgid "Download object"
+msgstr "下载对象"
+
+msgid "Delete object"
+msgstr "删除对象"
+
+msgid "Version ID"
+msgstr "版本 ID"
+
+msgid "Object info"
+msgstr "对象信息"
+
+msgid "Include metadata"
+msgstr "包含元数据"
+
+msgid "Include ACL"
+msgstr "包含 ACL"
+
+msgid "Copy object"
+msgstr "复制对象"
+
+msgid "Source config name"
+msgstr "源配置名称"
+
+msgid "Source bucket"
+msgstr "源存储桶"
+
+msgid "Source key"
+msgstr "源键"
+
+msgid "Target config name"
+msgstr "目标配置名称"
+
+msgid "Target bucket"
+msgstr "目标存储桶"
+
+msgid "Target key"
+msgstr "目标键"
+
+msgid "Preserve metadata"
+msgstr "保留元数据"
+
+msgid "Preserve ACL"
+msgstr "保留 ACL"
+
+msgid "Metadata operations"
+msgstr "元数据操作"
+
+msgid "Get metadata"
+msgstr "获取元数据"
+
+msgid "Set metadata"
+msgstr "设置元数据"
+
+msgid "ACL operations"
+msgstr "ACL 操作"
+
+msgid "Get ACL"
+msgstr "获取 ACL"
+
+msgid "Set ACL"
+msgstr "设置 ACL"
+
+msgid "Canned ACL"
+msgstr "预定义 ACL"
+
+msgid "Grant read"
+msgstr "授予读取权限"
+
+msgid "Grant full control"
+msgstr "授予完全控制权限"
+
+msgid "Copy ACL"
+msgstr "复制 ACL"
+
+msgid "Sync/Migration operations"
+msgstr "同步/迁移操作"
+
+msgid "Run sync/migration"
+msgstr "运行同步/迁移"
+
+msgid "Source prefix"
+msgstr "源前缀"
+
+msgid "Target prefix"
+msgstr "目标前缀"
+
+msgid "Sync since (ISO format)"
+msgstr "同步自 (ISO 格式)"
+
+msgid "Sync since last sync"
+msgstr "自上次同步后同步"
+
+msgid "Delete objects not in source (sync mode)"
+msgstr "删除源中不存在的对象 (同步模式)"
+
+msgid "Threads"
+msgstr "线程数"
+
+msgid "Part size (MB)"
+msgstr "分块大小 (MB)"
+
+msgid "Exclude patterns"
+msgstr "排除模式"
+
+msgid "Include patterns"
+msgstr "包含模式"
+
+msgid "Dry run"
+msgstr "预览运行"
+
+msgid "Resume migration"
+msgstr "恢复迁移"
+
+msgid "List sync/migration history"
+msgstr "列出同步/迁移历史"
+
+msgid "Limit"
+msgstr "限制"
+
+msgid "Sync/migration status"
+msgstr "同步/迁移状态"
+
+msgid "Migration ID"
+msgstr "迁移 ID"
+
+msgid "Validation operations"
+msgstr "校验操作"
+
+msgid "Run validation"
+msgstr "运行校验"
+
+msgid "What to check"
+msgstr "校验内容"
+
+msgid "Metadata fields to check (comma-separated)"
+msgstr "要校验的元数据字段 (逗号分隔)"
+
+msgid "Show validation report"
+msgstr "显示校验报告"
+
+msgid "Validation ID"
+msgstr "校验 ID"
+
+msgid "List validation reports"
+msgstr "列出校验报告"
