@@ -57,8 +57,8 @@ pip install skycli
 ### 💻 方式二：源码安装
 
 ```bash
-git clone https://github.com/your-repo/skycli.git
-cd skycli
+git clone https://gitee.com/skybiubiu/skycli-object-migration.git
+cd skycli-object-migration
 pip install -e .
 ```
 
@@ -633,6 +633,14 @@ skycli sync run \
 
 ## 📜 更新日志 (Changelog)
 
+### 🆕 v0.3.3 (2026-04-12)
+
+**Gitee 仓库链接修复**
+
+- 修复源码安装命令中的 GitHub 链接为 Gitee 仓库地址
+- 修复贡献指南中的克隆命令和目录名称
+- 目录名称统一为 `skycli-object-migration`
+
 ### 🆕 v0.3.2 (2026-04-12)
 
 **README 优化**
@@ -766,8 +774,8 @@ skycli sync run \
 
 ```bash
 # 克隆仓库
-git clone https://github.com/your-repo/skycli.git
-cd skycli
+git clone https://gitee.com/skybiubiu/skycli-object-migration.git
+cd skycli-object-migration
 
 # 安装开发依赖
 pip install -e ".[dev]"
