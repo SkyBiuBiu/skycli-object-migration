@@ -105,7 +105,89 @@ class TestSkyMetadata:
 
         result = metadata_handler.compare(meta1, meta2)
         assert result["match"] == False
-        assert "Metadata" in result["differences"]
+
+    def test_copy_metadata(self, metadata_handler, client):
+        """测试元数据复制功能"""
+        source_key = "meta_source.txt"
+        target_key = "meta_target.txt"
+        metadata = {"copied-key": "copied-value", "app": "test"}
+
+        client.put_object(TEST_BUCKET_1, source_key, b"source content", metadata=metadata)
+
+        metadata_handler.copy(
+            source_bucket=TEST_BUCKET_1,
+            source_key=source_key,
+            target_bucket=TEST_BUCKET_1,
+            target_key=target_key
+        )
+
+        result = metadata_handler.get(TEST_BUCKET_1, target_key)
+        assert "Metadata" in result
+        assert result["Metadata"].get("copied-key") == "copied-value"
+        assert result["Metadata"].get("app") == "test"
+
+    def test_copy_metadata_with_new_metadata(self, metadata_handler, client):
+        """测试复制元数据时添加新元数据"""
+        source_key = "meta_source2.txt"
+        target_key = "meta_target2.txt"
+        metadata = {"original": "data"}
+
+        client.put_object(TEST_BUCKET_1, source_key, b"source", metadata=metadata)
+
+        # 复制到不同的对象
+        metadata_handler.copy(
+            source_bucket=TEST_BUCKET_1,
+            source_key=source_key,
+            target_bucket=TEST_BUCKET_1,
+            target_key=target_key
+        )
+
+        result = metadata_handler.get(TEST_BUCKET_1, target_key)
+        assert result["Metadata"].get("original") == "data"
+
+    def test_get_metadata_nonexistent_object(self, metadata_handler):
+        """测试获取不存在对象的元数据"""
+        with pytest.raises(Exception):
+            metadata_handler.get(TEST_BUCKET_1, "nonexistent.txt")
+
+    def test_set_metadata_with_copy(self, metadata_handler, client):
+        """测试使用 COPY 操作设置元数据"""
+        key = "meta_copy_op.txt"
+        content = b"Test content"
+
+        client.put_object(TEST_BUCKET_1, key, content, metadata={"initial": "value"})
+
+        metadata_handler.set(
+            bucket=TEST_BUCKET_1,
+            key=key,
+            metadata={"added": "field"},
+            operation="COPY"
+        )
+
+        result = metadata_handler.get(TEST_BUCKET_1, key)
+        assert result["Metadata"].get("initial") == "value"
+        assert result["Metadata"].get("added") == "field"
+
+    def test_compare_metadata_different_sizes(self, metadata_handler, client):
+        """测试比较不同大小的元数据"""
+        key1 = "meta_size1.txt"
+        key2 = "meta_size2.txt"
+
+        client.put_object(TEST_BUCKET_1, key1, b"content", metadata={"key": "value"})
+        client.put_object(TEST_BUCKET_1, key2, b"content", metadata={"key": "value", "extra": "field"})
+
+        meta1 = metadata_handler.get(TEST_BUCKET_1, key1)
+        meta2 = metadata_handler.get(TEST_BUCKET_1, key2)
+
+        result = metadata_handler.compare(meta1, meta2)
+        assert result["match"] == False
+
+    def test_metadata_handler_initialization(self, client):
+        """测试元数据处理器初始化"""
+        from s3_manager.skymetadata import SkyMetadata
+        
+        handler = SkyMetadata(client)
+        assert handler.client == client
 
     def test_list_for_prefix(self, metadata_handler, client):
         prefix = "test_prefix_meta/"

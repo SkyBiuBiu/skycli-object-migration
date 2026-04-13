@@ -34,6 +34,7 @@ test = [
     "pytest-mock>=3.10.0",
     "moto[s3]>=5.0.0",
     "responses>=0.23.0",
+    "pytest-cov>=4.0.0",
 ]
 
 [project.scripts]
@@ -44,3 +45,29 @@ version = {attr = "s3_manager._version.__version__"}
 
 [tool.setuptools.packages.find]
 where = ["."]
+
+[tool.coverage.run]
+source = ["s3_manager"]
+branch = true
+omit = [
+    "*/__pycache__/*",
+    "*/tests/*",
+    "*/locale/*",
+    "*/*.pyc",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+    "@abstractmethod",
+]
+show_missing = true
+fail_under = 80
+
+[tool.coverage.html]
+directory = "htmlcov"

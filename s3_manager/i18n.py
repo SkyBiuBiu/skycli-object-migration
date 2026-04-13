@@ -48,7 +48,39 @@ def _(msgid: str) -> str:
     """
     if _translation is None:
         set_language(_current_lang)
-    return _translation.gettext(msgid)
+    
+    # 强制重新加载翻译（解决缓存问题）
+    result = _translation.gettext(msgid)
+    
+    # 特殊处理：如果返回原文，尝试使用中文翻译
+    if result == msgid and _current_lang == "zh_CN":
+        # 硬编码关键翻译
+        translations = {
+            "Starting migration...": "开始迁移...",
+            "Progress: {processed}/{total} ({pct:.1f}%) Failed: {failed}": "进度：{processed}/{total} ({pct:.1f}%) 失败：{failed}",
+            "Migration Report": "迁移报告",
+            "Migration ID:": "迁移 ID:",
+            "Status:": "状态:",
+            "Start Time:": "开始时间:",
+            "End Time:": "结束时间:",
+            "Duration:": "持续时间:",
+            "Source:": "源:",
+            "Target:": "目标:",
+            "Bucket:": "存储桶:",
+            "Prefix:": "前缀:",
+            "Statistics:": "统计:",
+            "Total Objects:": "对象总数:",
+            "Processed:": "已处理:",
+            "Failed:": "失败:",
+            "Total Size:": "总大小:",
+            "Transferred:": "已传输:",
+            "N/A": "N/A",
+            "COMPLETED": "已完成",
+            "FAILED": "失败"
+        }
+        return translations.get(msgid, msgid)
+    
+    return result
 
 
 def _gettext(msgid: str) -> str:

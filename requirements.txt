@@ -6,3 +6,4 @@ watchdog>=3.0.0
 # Test dependencies
 moto[s3]>=5.0.0
 responses>=0.23.0
+pytest-cov>=4.0.0

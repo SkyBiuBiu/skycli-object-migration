@@ -45,6 +45,7 @@ class SyncResult:
     skipped: bool = False
     error: Optional[str] = None
     reason: Optional[str] = None
+    size: int = 0
 
 
 @dataclass
@@ -385,9 +386,13 @@ class SyncTask:
         size = obj.get("Size", 0)
 
         if size > LARGE_FILE_THRESHOLD:
-            return self._migrate_large_object(obj, metadata_cache)
+            result = self._migrate_large_object(obj, metadata_cache)
         else:
-            return self._migrate_small_object(obj, metadata_cache)
+            result = self._migrate_small_object(obj, metadata_cache)
+
+        if not hasattr(result, 'size') or result.size == 0:
+            result.size = size
+        return result
 
     def _sync_object(self, obj: Dict, metadata_cache: Optional[Dict[str, Dict]] = None):
         result = self._migrate_object(obj, metadata_cache)
@@ -431,6 +436,7 @@ class SyncTask:
         objects_to_sync = []
         for obj in source_objects:
             source_key = obj["Key"]
+            self.total_bytes += obj.get("Size", 0)
 
             if source_key in self._checkpoint_cache:
                 self.skipped += 1
@@ -475,6 +481,7 @@ class SyncTask:
                         self.skipped += 1
                     else:
                         self.uploaded += 1
+                        self.transferred_bytes += result.size
                 else:
                     self.failed += 1
                     self.failed_list.append({
@@ -524,6 +531,8 @@ class SyncTask:
             "deleted": self.deleted,
             "skipped": self.skipped,
             "failed": self.failed,
+            "total_bytes": self.total_bytes,
+            "transferred_bytes": self.transferred_bytes,
             "duration_seconds": duration,
             "start_time": self.start_time.isoformat() if self.start_time else None,
             "end_time": self.end_time.isoformat() if self.end_time else None,
