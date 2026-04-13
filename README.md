@@ -637,7 +637,7 @@ skycli sync run \
 
 **代码清理**
 
-- 删除无用的临时测试文件 (test_direct.py, test_debug.py, test_startup.py)
+- 删除无用的临时测试文件  (test_direct.py, test_debug.py, test_startup.py)
 
 **版本管理优化**
 
