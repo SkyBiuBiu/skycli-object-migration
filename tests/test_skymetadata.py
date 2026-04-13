@@ -199,3 +199,56 @@ class TestSkyMetadata:
 
         results = metadata_handler.list_for_prefix(TEST_BUCKET_1, prefix)
         assert len(results) >= 2
+
+    def test_metadata_set_without_operation(self, metadata_handler, client):
+        """测试不使用 operation 参数设置元数据"""
+        key = "meta_no_op.txt"
+        content = b"Test content"
+
+        client.put_object(TEST_BUCKET_1, key, content)
+
+        # 不使用 operation 参数，应该使用 PUT
+        metadata_handler.set(
+            bucket=TEST_BUCKET_1,
+            key=key,
+            metadata={"new": "value"}
+        )
+
+        result = metadata_handler.get(TEST_BUCKET_1, key)
+        assert result["Metadata"].get("new") == "value"
+
+    def test_metadata_compare_with_etag(self, metadata_handler, client):
+        """测试带 ETag 比较的元数据比较"""
+        key = "meta_etag.txt"
+        content = b"ETag test content"
+
+        client.put_object(TEST_BUCKET_1, key, content, metadata={"test": "etag"})
+
+        meta1 = metadata_handler.get(TEST_BUCKET_1, key)
+        meta2 = metadata_handler.get(TEST_BUCKET_1, key)
+
+        # 同一个对象的元数据应该匹配
+        result = metadata_handler.compare(meta1, meta2)
+        assert result["match"] == True
+
+    def test_metadata_get_nonexistent_bucket(self, metadata_handler):
+        """测试获取不存在桶的元数据"""
+        with pytest.raises(Exception):
+            metadata_handler.get("nonexistent-bucket-xyz", "key.txt")
+
+    def test_metadata_handler_class_methods(self, client):
+        """测试 SkyMetadata 类的方法"""
+        from s3_manager.skymetadata import SkyMetadata
+        
+        handler = SkyMetadata(client)
+        
+        # 测试 client 属性
+        assert handler.client == client
+        
+        # 测试 compare 方法返回结构
+        meta1 = {"Metadata": {"key": "value1"}, "ETag": "etag1"}
+        meta2 = {"Metadata": {"key": "value2"}, "ETag": "etag2"}
+        
+        result = handler.compare(meta1, meta2)
+        assert isinstance(result, dict)
+        assert "match" in result

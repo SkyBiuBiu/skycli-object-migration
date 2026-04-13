@@ -197,3 +197,54 @@ class TestSkyACL:
 
         # 验证 Owner 相同
         assert source_acl["Owner"]["ID"] == target_acl["Owner"]["ID"]
+
+    @pytest.mark.skip(reason="MinIO does not support full ACL operations")
+    def test_acl_set_with_grant_parameters(self, acl_handler, client):
+        """测试使用 grant 参数设置 ACL"""
+        key = "acl_grant_params.txt"
+        client.put_object(TEST_BUCKET_1, key, b"Grant params test")
+
+        # 使用 grant_read 参数
+        acl_handler.set(
+            TEST_BUCKET_1,
+            key,
+            grant_read="test-grantee-id"
+        )
+
+        acl = acl_handler.get(TEST_BUCKET_1, key)
+        assert acl is not None
+
+    def test_acl_set_bucket_acl(self, acl_handler, client):
+        """测试设置桶 ACL"""
+        # 使用 canned ACL 设置桶 ACL
+        acl_handler.set(TEST_BUCKET_1, acl="private")
+
+        acl = acl_handler.get(TEST_BUCKET_1)
+        assert acl is not None
+        assert "Owner" in acl
+
+    def test_acl_with_version_id(self, acl_handler, client):
+        """测试带版本 ID 的 ACL 操作"""
+        key = "acl_versioned.txt"
+        client.put_object(TEST_BUCKET_1, key, b"Versioned ACL test")
+
+        # 获取 ACL（不带版本 ID）
+        acl = acl_handler.get(TEST_BUCKET_1, key)
+        assert acl is not None
+
+    @pytest.mark.skip(reason="MinIO does not support full ACL operations")
+    def test_acl_set_with_owner(self, acl_handler, client):
+        """测试使用 owner 参数设置 ACL"""
+        key = "acl_owner.txt"
+        client.put_object(TEST_BUCKET_1, key, b"Owner test")
+
+        # 使用 owner 参数
+        acl_handler.set(
+            TEST_BUCKET_1,
+            key,
+            owner_id="test-owner-id",
+            owner_display_name="Test Owner"
+        )
+
+        acl = acl_handler.get(TEST_BUCKET_1, key)
+        assert acl is not None

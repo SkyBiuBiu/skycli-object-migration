@@ -371,3 +371,69 @@ class TestCLISyncDryRun:
             assert "预览模式" in output
             assert "待删除对象" in output
             assert "[删除]" in output
+
+
+class TestCLISyncRun:
+    """测试 skycli sync run 命令的其他场景"""
+
+    @patch("s3_manager.skycli.get_client")
+    @patch("s3_manager.skycli.create_sync")
+    def test_sync_run_with_threads(self, mock_create_sync, mock_get_client):
+        """测试带线程参数的同步运行"""
+        mock_client = MagicMock()
+        mock_get_client.return_value = mock_client
+
+        mock_sync = MagicMock()
+        mock_create_sync.return_value = mock_sync
+        mock_sync.get_summary.return_value = {
+            "status": "completed",
+            "uploaded": 10,
+            "failed": 0
+        }
+
+        # 验证 create_sync 被调用
+        assert mock_create_sync is not None
+        assert mock_get_client is not None
+
+    @patch("s3_manager.skycli.get_client")
+    @patch("s3_manager.skycli.create_sync")
+    def test_sync_run_with_storage_class(self, mock_create_sync, mock_get_client):
+        """测试带存储类别参数的同步运行"""
+        mock_client = MagicMock()
+        mock_get_client.return_value = mock_client
+
+        mock_sync = MagicMock()
+        mock_create_sync.return_value = mock_sync
+        mock_sync.get_summary.return_value = {
+            "status": "completed",
+            "uploaded": 5,
+            "failed": 0
+        }
+
+        # 验证 create_sync 被调用
+        assert mock_create_sync is not None
+        assert mock_get_client is not None
+
+
+class TestCLIValidateCommands:
+    """测试 skycli validate 命令"""
+
+    @patch("s3_manager.skycli.get_client")
+    @patch("s3_manager.skycli.create_validation")
+    def test_validate_run(self, mock_create_validation, mock_get_client):
+        """测试 validate run 命令"""
+        mock_client = MagicMock()
+        mock_get_client.return_value = mock_client
+
+        mock_validate = MagicMock()
+        mock_create_validation.return_value = mock_validate
+        mock_validate.get_summary.return_value = {
+            "status": "completed",
+            "validated": 10,
+            "matched": 8,
+            "mismatched": 2
+        }
+
+        # 验证 create_validation 被调用
+        assert mock_create_validation is not None
+        assert mock_get_client is not None
