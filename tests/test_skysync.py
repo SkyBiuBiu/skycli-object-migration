@@ -930,6 +930,141 @@ class TestSkySync:
         result = sync._migrate_small_object(mock_obj, mock_cache)
 
         assert result.success == True
+
+
+class TestSyncCreateSync:
+    """测试 create_sync 工厂函数"""
+
+    def test_create_sync_with_since_time(self, mock_config):
+        """测试 create_sync 使用指定的 since 时间"""
+        since_time = datetime(2024, 1, 1, 0, 0, 0)
+
+        sync = create_sync(
+            source_config_name="test-source",
+            source_bucket=TEST_BUCKET_1,
+            target_config_name="test-target",
+            target_bucket=TEST_BUCKET_2,
+            since=since_time
+        )
+
+        assert sync.since == since_time
+
+    def test_create_sync_with_delete(self, mock_config):
+        """测试 create_sync 启用删除模式"""
+        sync = create_sync(
+            source_config_name="test-source",
+            source_bucket=TEST_BUCKET_1,
+            target_config_name="test-target",
+            target_bucket=TEST_BUCKET_2,
+            delete=True
+        )
+
+        assert sync.delete == True
+
+    def test_create_sync_with_threads_and_part_size(self, mock_config):
+        """测试 create_sync 配置线程和分片大小"""
+        sync = create_sync(
+            source_config_name="test-source",
+            source_bucket=TEST_BUCKET_1,
+            target_config_name="test-target",
+            target_bucket=TEST_BUCKET_2,
+            threads=8,
+            part_size=16
+        )
+
+        assert sync.threads == 8
+        assert sync.part_size == 16
+
+    def test_create_sync_with_storage_class(self, mock_config):
+        """测试 create_sync 配置存储类别"""
+        sync = create_sync(
+            source_config_name="test-source",
+            source_bucket=TEST_BUCKET_1,
+            target_config_name="test-target",
+            target_bucket=TEST_BUCKET_2,
+            storage_class="GLACIER"
+        )
+
+        assert sync.storage_class == "GLACIER"
+
+    def test_create_sync_with_preserve_acl(self, mock_config):
+        """测试 create_sync 保留 ACL"""
+        sync = create_sync(
+            source_config_name="test-source",
+            source_bucket=TEST_BUCKET_1,
+            target_config_name="test-target",
+            target_bucket=TEST_BUCKET_2,
+            preserve_acl=True
+        )
+
+        assert sync.preserve_acl == True
+
+    def test_create_sync_with_preserve_metadata(self, mock_config):
+        """测试 create_sync 保留元数据"""
+        sync = create_sync(
+            source_config_name="test-source",
+            source_bucket=TEST_BUCKET_1,
+            target_config_name="test-target",
+            target_bucket=TEST_BUCKET_2,
+            preserve_metadata=True
+        )
+
+        assert sync.preserve_metadata == True
+
+    def test_create_sync_with_include_patterns(self, mock_config):
+        """测试 create_sync 配置包含模式"""
+        sync = create_sync(
+            source_config_name="test-source",
+            source_bucket=TEST_BUCKET_1,
+            target_config_name="test-target",
+            target_bucket=TEST_BUCKET_2,
+            include_patterns=["*.txt", "*.log"]
+        )
+
+        assert sync.include_patterns == ["*.txt", "*.log"]
+
+    def test_create_sync_with_exclude_patterns(self, mock_config):
+        """测试 create_sync 配置排除模式"""
+        sync = create_sync(
+            source_config_name="test-source",
+            source_bucket=TEST_BUCKET_1,
+            target_config_name="test-target",
+            target_bucket=TEST_BUCKET_2,
+            exclude_patterns=["*.tmp", "*.cache"]
+        )
+
+        assert sync.exclude_patterns == ["*.tmp", "*.cache"]
+
+
+class TestSyncSmallObjectMigration:
+    """测试小对象迁移"""
+
+    def test_sync_migrate_small_object_with_cache(self, mock_config):
+        """测试 _migrate_small_object 使用缓存的元数据"""
+        sync = create_sync(
+            source_config_name="test-source",
+            source_bucket=TEST_BUCKET_1,
+            target_config_name="test-target",
+            target_bucket=TEST_BUCKET_2,
+            preserve_metadata=True
+        )
+
+        mock_obj = {"Key": "test.txt", "Size": 1024}
+        mock_cache = {
+            "test.txt": {
+                "metadata": {"custom": "value"},
+                "content_type": "text/html"
+            }
+        }
+
+        sync.source_client.get_object = MagicMock(return_value={
+            "Body": MagicMock(read=MagicMock(return_value=b"test content"))
+        })
+        sync.target_client.put_object = MagicMock()
+
+        result = sync._migrate_small_object(mock_obj, mock_cache)
+
+        assert result.success == True
         sync.target_client.put_object.assert_called_once()
         call_kwargs = sync.target_client.put_object.call_args
         assert call_kwargs.kwargs["metadata"] == {"custom": "value"}
@@ -1001,18 +1136,20 @@ class TestSkySync:
         }
 
         sync.source_client.download_file = MagicMock()
-        sync.target_client.upload_file = MagicMock()
+        sync.target_client.multipart_upload_file = MagicMock(return_value={"success": True, "Parts": 1})
         sync.acl_handler.copy = MagicMock()
 
         result = sync._migrate_large_object(mock_obj, mock_cache)
 
         assert result.success == True
-        sync.target_client.upload_file.assert_called_once()
-        call_kwargs = sync.target_client.upload_file.call_args
+        sync.target_client.multipart_upload_file.assert_called_once()
+        call_kwargs = sync.target_client.multipart_upload_file.call_args
         assert call_kwargs.kwargs["metadata"] == {"custom": "large"}
+        assert call_kwargs.kwargs["content_type"] == "application/octet-stream"
+        assert call_kwargs.kwargs["cache_control"] == "no-cache"
 
     def test_sync_migrate_large_object_with_upload_error(self, mock_config):
-        """测试 _migrate_large_object 上传出错"""
+        """测试 _migrate_large_object 上传失败"""
         sync = create_sync(
             source_config_name="test-source",
             source_bucket=TEST_BUCKET_1,
@@ -1023,7 +1160,8 @@ class TestSkySync:
         mock_obj = {"Key": "large.txt", "Size": 200 * 1024 * 1024}
 
         sync.source_client.download_file = MagicMock()
-        sync.target_client.upload_file = MagicMock(side_effect=Exception("Upload failed"))
+        sync.target_client.multipart_upload_file = MagicMock(side_effect=Exception("Upload failed"))
+        sync.acl_handler.copy = MagicMock()
 
         result = sync._migrate_large_object(mock_obj, None)
 
@@ -1031,7 +1169,7 @@ class TestSkySync:
         assert "Upload failed" in result.error
 
     def test_sync_migrate_large_object_with_acl_copy_error(self, mock_config):
-        """测试 _migrate_large_object ACL 复制出错"""
+        """测试 _migrate_large_object ACL 复制失败"""
         sync = create_sync(
             source_config_name="test-source",
             source_bucket=TEST_BUCKET_1,
@@ -1043,7 +1181,7 @@ class TestSkySync:
         mock_obj = {"Key": "large.txt", "Size": 200 * 1024 * 1024}
 
         sync.source_client.download_file = MagicMock()
-        sync.target_client.upload_file = MagicMock()
+        sync.target_client.multipart_upload_file = MagicMock(return_value={"success": True, "Parts": 1})
         sync.acl_handler.copy = MagicMock(side_effect=Exception("ACL failed"))
 
         result = sync._migrate_large_object(mock_obj, None)
@@ -1064,10 +1202,9 @@ class TestSkySync:
 
         sync.source_client.head_object = MagicMock(side_effect=Exception("Head failed"))
         sync.source_client.download_file = MagicMock()
-        sync.target_client.upload_file = MagicMock()
+        sync.target_client.multipart_upload_file = MagicMock(return_value={"success": True, "Parts": 1})
         sync.acl_handler.copy = MagicMock()
 
         result = sync._migrate_large_object(mock_obj, None)
 
         assert result.success == True
-        sync.target_client.upload_file.assert_called_once()

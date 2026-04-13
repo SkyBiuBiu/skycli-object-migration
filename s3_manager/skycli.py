@@ -25,7 +25,8 @@ def get_client(config_name: str, profile: Optional[str] = None) -> SkyClient:
         secret_key=cfg["secret_key"],
         region=cfg.get("region", "us-east-1"),
         use_path_style=cfg.get("use_path_style", False),
-        verify_ssl=cfg.get("verify_ssl", True)
+        verify_ssl=cfg.get("verify_ssl", True),
+        signature_version=cfg.get("signature_version", "s3v4")
     )
 
 
@@ -38,6 +39,7 @@ def cmd_config_add(args):
         region=args.region or "us-east-1",
         use_path_style=args.use_path_style,
         verify_ssl=not args.no_verify_ssl,
+        signature_version=args.signature_version,
         profile=args.profile
     )
     print(_("Config '{name}' added successfully").format(name=args.name))
@@ -639,6 +641,7 @@ def main():
     c_add.add_argument("--region", help=_("Region"))
     c_add.add_argument("--use-path-style", action="store_true", help=_("Use path style"))
     c_add.add_argument("--no-verify-ssl", action="store_true", help=_("Disable SSL verification"))
+    c_add.add_argument("--signature-version", default="s3v4", help=_("AWS signature version (s3, s3v4, v2, v4, s3v2)"))
     c_add.add_argument("--profile", help=_("Profile name"))
     c_add.set_defaults(func=cmd_config_add)
 
@@ -817,8 +820,8 @@ def main():
     s_run.add_argument("--threads", type=int, default=10, help=_("Threads"))
     s_run.add_argument("--part-size", type=int, default=8, help=_("Part size (MB)"))
     s_run.add_argument("--storage-class", help=_("Storage class"))
-    s_run.add_argument("--preserve-metadata", action="store_true", default=True, help=_("Preserve metadata"))
-    s_run.add_argument("--preserve-acl", action="store_true", default=True, help=_("Preserve ACL"))
+    s_run.add_argument("--preserve-metadata", action="store_true", help=_("Preserve metadata"))
+    s_run.add_argument("--preserve-acl", action="store_true", help=_("Preserve ACL"))
     s_run.add_argument("--exclude", nargs="+", help=_("Exclude patterns"))
     s_run.add_argument("--include", nargs="+", help=_("Include patterns"))
     s_run.add_argument("--dry-run", action="store_true", help=_("Dry run"))

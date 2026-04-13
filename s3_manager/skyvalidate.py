@@ -274,7 +274,8 @@ def create_validation(
         secret_key=source_config["secret_key"],
         region=source_config.get("region", "us-east-1"),
         use_path_style=source_config.get("use_path_style", False),
-        verify_ssl=source_config.get("verify_ssl", True)
+        verify_ssl=source_config.get("verify_ssl", True),
+        signature_version=source_config.get("signature_version", "s3v4")
     )
 
     target_client = SkyClient(
@@ -283,7 +284,8 @@ def create_validation(
         secret_key=target_config["secret_key"],
         region=target_config.get("region", "us-east-1"),
         use_path_style=target_config.get("use_path_style", False),
-        verify_ssl=target_config.get("verify_ssl", True)
+        verify_ssl=target_config.get("verify_ssl", True),
+        signature_version=target_config.get("signature_version", "s3v4")
     )
 
     validation_id = f"val-{datetime.now().strftime('%Y%m%d%H%M%S')}"

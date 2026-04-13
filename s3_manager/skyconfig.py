@@ -102,6 +102,7 @@ class SkyConfig:
         region: str = "us-east-1",
         use_path_style: bool = False,
         verify_ssl: bool = True,
+        signature_version: str = "s3v4",
         profile: Optional[str] = None
     ):
         if not endpoint.startswith(("http://", "https://")):
@@ -121,7 +122,8 @@ class SkyConfig:
                 "secret_key": secret_key,
                 "region": region,
                 "use_path_style": use_path_style,
-                "verify_ssl": verify_ssl
+                "verify_ssl": verify_ssl,
+                "signature_version": signature_version
             }
 
             if self.default_profile is None:
@@ -225,7 +227,8 @@ class SkyConfig:
             secret_key=config["secret_key"],
             region=config.get("region", "us-east-1"),
             use_path_style=config.get("use_path_style", False),
-            verify_ssl=config.get("verify_ssl", True)
+            verify_ssl=config.get("verify_ssl", True),
+            signature_version=config.get("signature_version", "s3v4")
         )
 
         return client.test_connection()

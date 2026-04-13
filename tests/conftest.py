@@ -22,6 +22,7 @@ TEST_SECRET_KEY = os.environ.get("SKYCLI_TEST_SECRET_KEY", "test")
 TEST_BUCKET_1 = os.environ.get("SKYCLI_TEST_BUCKET_1", "test-bucket-1")
 TEST_BUCKET_2 = os.environ.get("SKYCLI_TEST_BUCKET_2", "test-bucket-2")
 TEST_REGION = os.environ.get("SKYCLI_TEST_REGION", "us-west-2")
+TEST_SIGNATURE_VERSION = os.environ.get("AWS_SIGNATURE_VERSION", "s3v4")
 
 
 @pytest.fixture(scope="function")
@@ -50,7 +51,8 @@ def test_config(use_moto):
             "secret_key": "testing",
             "region": TEST_REGION,
             "use_path_style": False,
-            "verify_ssl": True
+            "verify_ssl": True,
+            "signature_version": TEST_SIGNATURE_VERSION
         }
     else:
         return {
@@ -59,7 +61,8 @@ def test_config(use_moto):
             "secret_key": TEST_SECRET_KEY,
             "region": TEST_REGION,
             "use_path_style": True,
-            "verify_ssl": False
+            "verify_ssl": False,
+            "signature_version": TEST_SIGNATURE_VERSION
         }
 
 

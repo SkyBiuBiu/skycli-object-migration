@@ -1,7 +1,8 @@
 import boto3
 import botocore
+import os
 from botocore.config import Config
-from typing import Dict, List, Optional, Any, Iterator
+from typing import Dict, List, Optional, Any, Iterator, Callable
 from datetime import datetime
 
 
@@ -13,7 +14,8 @@ class SkyClient:
         secret_key: str,
         region: str = "us-east-1",
         use_path_style: bool = False,
-        verify_ssl: bool = True
+        verify_ssl: bool = True,
+        signature_version: str = "s3v4"
     ):
         self.endpoint = endpoint
         self.access_key = access_key
@@ -21,6 +23,7 @@ class SkyClient:
         self.region = region
         self.use_path_style = use_path_style
         self.verify_ssl = verify_ssl
+        self.signature_version = signature_version
 
         self._client = self._create_client()
         self._resource = self._create_resource()
@@ -38,8 +41,8 @@ class SkyClient:
         """
         config = Config(
             region_name=self.region,
-            signature_version="s3v4",
-            s3={"addressing_style": "path" if self.use_path_style else "auto"},
+            signature_version=self.signature_version,
+            s3={"addressing_style": "path" if self.use_path_style else "virtual"},
             retries={"max_attempts": 3, "mode": "standard"},
             connect_timeout=5,
             read_timeout=10
@@ -60,14 +63,14 @@ class SkyClient:
 
         Returns:
             boto3.resource: Configured S3 resource with:
-                - Signature version: s3v4
+                - Signature version: configurable
                 - Addressing style: path or virtual (based on use_path_style)
                 - Connect timeout: 5 seconds
                 - Read timeout: 10 seconds
         """
         config = Config(
             region_name=self.region,
-            signature_version="s3v4",
+            signature_version=self.signature_version,
             s3={"addressing_style": "path" if self.use_path_style else "auto"},
             connect_timeout=5,
             read_timeout=10
@@ -137,7 +140,15 @@ class SkyClient:
         if continuation_token:
             kwargs["ContinuationToken"] = continuation_token
 
-        response = self._client.list_objects_v2(**kwargs)
+        try:
+            response = self._client.list_objects_v2(**kwargs)
+        except botocore.exceptions.ClientError as e:
+            error_code = e.response.get("Error", {}).get("Code", "Unknown")
+            error_message = e.response.get("Error", {}).get("Message", str(e))
+            raise RuntimeError(
+                f"Failed to list objects in bucket '{bucket}' with prefix '{prefix}': "
+                f"[{error_code}] {error_message}"
+            )
 
         objects = []
         for obj in response.get("Contents", []):
@@ -452,3 +463,180 @@ class SkyClient:
             Params={"Bucket": bucket, "Key": key},
             ExpiresIn=expires_in
         )
+
+    def create_multipart_upload(
+        self,
+        bucket: str,
+        key: str,
+        metadata: Optional[Dict[str, str]] = None,
+        content_type: Optional[str] = None,
+        storage_class: str = "STANDARD",
+        sse: Optional[Dict] = None
+    ) -> Dict:
+        kwargs = {"Bucket": bucket, "Key": key}
+
+        if content_type:
+            kwargs["ContentType"] = content_type
+        if storage_class:
+            kwargs["StorageClass"] = storage_class
+        if metadata:
+            kwargs["Metadata"] = metadata
+        if sse:
+            kwargs["ServerSideEncryption"] = sse.get("Algorithm", "AES256")
+            if "KmsKeyId" in sse:
+                kwargs["SSEKMSKeyId"] = sse["KmsKeyId"]
+
+        response = self._client.create_multipart_upload(**kwargs)
+        return {
+            "UploadId": response["UploadId"],
+            "Bucket": bucket,
+            "Key": key
+        }
+
+    def upload_part(
+        self,
+        bucket: str,
+        key: str,
+        upload_id: str,
+        part_number: int,
+        data: bytes
+    ) -> Dict:
+        kwargs = {
+            "Bucket": bucket,
+            "Key": key,
+            "UploadId": upload_id,
+            "PartNumber": part_number,
+            "Body": data
+        }
+
+        response = self._client.upload_part(**kwargs)
+        return {
+            "ETag": response["ETag"].strip('"') if isinstance(response["ETag"], str) else response["ETag"].decode("utf-8").strip('"'),
+            "PartNumber": part_number
+        }
+
+    def complete_multipart_upload(
+        self,
+        bucket: str,
+        key: str,
+        upload_id: str,
+        parts: List[Dict]
+    ) -> Dict:
+        parts_list = [
+            {"PartNumber": p["PartNumber"], "ETag": p["ETag"]}
+            for p in sorted(parts, key=lambda x: x["PartNumber"])
+        ]
+
+        kwargs = {
+            "Bucket": bucket,
+            "Key": key,
+            "UploadId": upload_id,
+            "MultipartUpload": {"Parts": parts_list}
+        }
+
+        response = self._client.complete_multipart_upload(**kwargs)
+        return {
+            "Location": response.get("Location"),
+            "Bucket": response.get("Bucket"),
+            "Key": response.get("Key"),
+            "ETag": response.get("ETag", "").strip('"')
+        }
+
+    def abort_multipart_upload(self, bucket: str, key: str, upload_id: str) -> bool:
+        self._client.abort_multipart_upload(
+            Bucket=bucket,
+            Key=key,
+            UploadId=upload_id
+        )
+        return True
+
+    def list_parts(self, bucket: str, key: str, upload_id: str) -> List[Dict]:
+        response = self._client.list_parts(
+            Bucket=bucket,
+            Key=key,
+            UploadId=upload_id
+        )
+        return [
+            {
+                "PartNumber": p["PartNumber"],
+                "ETag": p["ETag"].strip('"') if isinstance(p["ETag"], str) else p["ETag"].decode("utf-8").strip('"'),
+                "Size": p["Size"]
+            }
+            for p in response.get("Parts", [])
+        ]
+
+    def list_multipart_uploads(self, bucket: str, prefix: str = "") -> List[Dict]:
+        kwargs = {"Bucket": bucket}
+        if prefix:
+            kwargs["Prefix"] = prefix
+
+        response = self._client.list_multipart_uploads(**kwargs)
+        uploads = []
+        for upload in response.get("Uploads", []):
+            uploads.append({
+                "Key": upload["Key"],
+                "UploadId": upload["UploadId"],
+                "Initiated": upload.get("Initiated"),
+                "StorageClass": upload.get("StorageClass", "STANDARD")
+            })
+        return uploads
+
+    def multipart_upload_file(
+        self,
+        bucket: str,
+        key: str,
+        file_path: str,
+        part_size: int = 8 * 1024 * 1024,
+        metadata: Optional[Dict[str, str]] = None,
+        content_type: Optional[str] = None,
+        storage_class: str = "STANDARD",
+        sse: Optional[Dict] = None,
+        cache_control: Optional[str] = None,
+        progress_callback: Optional[Callable] = None
+    ) -> Dict:
+        file_size = os.path.getsize(file_path)
+
+        extra_args = {}
+        if content_type:
+            extra_args["content_type"] = content_type
+        if cache_control:
+            extra_args["cache_control"] = cache_control
+
+        if file_size <= part_size:
+            return self.upload_file(bucket, key, file_path, metadata, content_type, storage_class, extra_args=extra_args if extra_args else None)
+
+        init_response = self.create_multipart_upload(
+            bucket, key, metadata, content_type, storage_class, sse
+        )
+        upload_id = init_response["UploadId"]
+
+        parts = []
+        uploaded_bytes = 0
+
+        try:
+            with open(file_path, "rb") as f:
+                part_number = 1
+                while True:
+                    data = f.read(part_size)
+                    if not data:
+                        break
+
+                    part_info = self.upload_part(bucket, key, upload_id, part_number, data)
+                    parts.append({
+                        "PartNumber": part_number,
+                        "ETag": part_info["ETag"]
+                    })
+
+                    uploaded_bytes += len(data)
+                    if progress_callback:
+                        progress_callback(uploaded_bytes, file_size)
+
+                    part_number += 1
+
+            result = self.complete_multipart_upload(bucket, key, upload_id, parts)
+            result["Parts"] = len(parts)
+            return result
+
+        except Exception as e:
+            self.abort_multipart_upload(bucket, key, upload_id)
+            raise e

@@ -633,6 +633,19 @@ skycli sync run \
 
 ## 📜 更新日志 (Changelog)
 
+### 🆕 v0.4.5 (2026-04-13)
+
+**签名版本配置支持**
+
+- 支持配置 AWS S3 签名版本 (s3, s3v4, v2, v4, s3v2)
+- 新增 `--signature-version` CLI 参数
+- 测试用例覆盖 signature_version 功能
+
+**同步选项默认行为调整**
+
+- `preserve_metadata` 和 `preserve_acl` 默认值改为 `False`
+- 报告新增元数据和 ACL 保留选项显示
+
 ### 🆕 v0.4.4 (2026-04-13)
 
 **测试覆盖率提升**

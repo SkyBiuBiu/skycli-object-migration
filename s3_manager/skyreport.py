@@ -52,6 +52,11 @@ class ReportGenerator:
         lines.append(f"  前缀:        {summary.get('target_prefix', '')}")
         lines.append("")
 
+        lines.append("选项:")
+        lines.append(f"  保留元数据:   {'是' if summary.get('preserve_metadata', False) else '否'}")
+        lines.append(f"  保留ACL:     {'是' if summary.get('preserve_acl', False) else '否'}")
+        lines.append("")
+
         lines.append("统计:")
         lines.append(f"  对象总数:    {summary.get('total_objects', 0):,}")
         lines.append(f"  已处理:      {summary.get('processed_objects', 0):,}")
@@ -96,6 +101,11 @@ class ReportGenerator:
         lines.append("目标:")
         lines.append(f"  存储桶:       {summary.get('target_bucket', 'N/A')}")
         lines.append(f"  前缀:         {summary.get('target_prefix', '')}")
+        lines.append("")
+
+        lines.append("选项:")
+        lines.append(f"  保留元数据:    {'是' if summary.get('preserve_metadata', False) else '否'}")
+        lines.append(f"  保留ACL:      {'是' if summary.get('preserve_acl', False) else '否'}")
         lines.append("")
 
         lines.append("统计:")

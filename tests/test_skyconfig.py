@@ -25,18 +25,43 @@ def temp_config_dir(tmp_path):
 class TestSkyConfig:
     def test_add_profile(self, temp_config_dir):
         config = temp_config_dir
-        
+
         config.add_profile(
             name="test1",
             endpoint="http://localhost:9000",
             access_key="admin",
             secret_key="password"
         )
-        
+
         profiles = config.list_profiles()
         assert len(profiles) == 1
         assert profiles[0]["name"] == "test1"
         assert profiles[0]["endpoint"] == "http://localhost:9000"
+
+    def test_add_profile_with_signature_version(self, temp_config_dir):
+        config = temp_config_dir
+
+        config.add_profile(
+            name="test_sig",
+            endpoint="http://localhost:9000",
+            access_key="admin",
+            secret_key="password",
+            signature_version="s3"
+        )
+
+        profile = config.get_profile("test_sig")
+        assert profile["signature_version"] == "s3"
+
+        config.add_profile(
+            name="test_sig_v4",
+            endpoint="http://localhost:9000",
+            access_key="admin",
+            secret_key="password",
+            signature_version="s3v4"
+        )
+
+        profile_v4 = config.get_profile("test_sig_v4")
+        assert profile_v4["signature_version"] == "s3v4"
 
     def test_add_multiple_profiles(self, temp_config_dir):
         config = temp_config_dir

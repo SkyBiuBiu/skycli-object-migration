@@ -77,8 +77,8 @@ class SyncTask:
     threads: int = 10
     part_size: int = 8
     storage_class: Optional[str] = None
-    preserve_metadata: bool = True
-    preserve_acl: bool = True
+    preserve_metadata: bool = False
+    preserve_acl: bool = False
     exclude_patterns: List[str] = field(default_factory=list)
     include_patterns: List[str] = field(default_factory=list)
     
@@ -355,13 +355,20 @@ class SyncTask:
 
             self.source_client.download_file(self.source_bucket, source_key, tmp_path)
 
-            self.target_client.upload_file(
+            extra_args = {}
+            if content_type:
+                extra_args["content_type"] = content_type
+            if cache_control:
+                extra_args["cache_control"] = cache_control
+
+            self.target_client.multipart_upload_file(
                 bucket=self.target_bucket,
                 key=target_key,
                 file_path=tmp_path,
+                part_size=self.part_size * 1024 * 1024,
                 metadata=metadata if metadata else None,
-                content_type=content_type,
-                storage_class=storage_cls
+                storage_class=storage_cls,
+                **extra_args
             )
 
         except Exception as e:
@@ -525,6 +532,8 @@ class SyncTask:
             "target_bucket": self.target_bucket,
             "source_prefix": self.source_prefix,
             "target_prefix": self.target_prefix,
+            "preserve_metadata": self.preserve_metadata,
+            "preserve_acl": self.preserve_acl,
             "total_objects": self.total_objects,
             "processed_objects": self.processed_objects,
             "uploaded": self.uploaded,
@@ -559,8 +568,8 @@ def create_sync(
     threads: int = 10,
     part_size: int = 8,
     storage_class: Optional[str] = None,
-    preserve_metadata: bool = True,
-    preserve_acl: bool = True,
+    preserve_metadata: bool = False,
+    preserve_acl: bool = False,
     exclude_patterns: Optional[List[str]] = None,
     include_patterns: Optional[List[str]] = None,
     profile: Optional[str] = None
@@ -579,7 +588,8 @@ def create_sync(
         secret_key=source_config["secret_key"],
         region=source_config.get("region", "us-east-1"),
         use_path_style=source_config.get("use_path_style", False),
-        verify_ssl=source_config.get("verify_ssl", True)
+        verify_ssl=source_config.get("verify_ssl", True),
+        signature_version=source_config.get("signature_version", "s3v4")
     )
 
     target_client = SkyClient(
@@ -588,7 +598,8 @@ def create_sync(
         secret_key=target_config["secret_key"],
         region=target_config.get("region", "us-east-1"),
         use_path_style=target_config.get("use_path_style", False),
-        verify_ssl=target_config.get("verify_ssl", True)
+        verify_ssl=target_config.get("verify_ssl", True),
+        signature_version=target_config.get("signature_version", "s3v4")
     )
 
     sync_id = f"sync-{datetime.now().strftime('%Y%m%d%H%M%S')}-{uuid.uuid4().hex[:8]}"
