@@ -5,6 +5,7 @@ from typing import Optional, List, Dict
 
 from .skyconfig import SkyConfig
 from .skyclient import SkyClient
+from ._version import get_version
 from .skyreport import ReportGenerator
 from .constants import CLI_STATUS_MESSAGES
 from .i18n import _
@@ -351,7 +352,7 @@ def cmd_sync_history(args):
                 time_str = datetime.fromisoformat(time_str.replace("Z", "+00:00")).strftime("%Y-%m-%d %H:%M")
             except:
                 pass
-
+        
         print("{:<20} {:<15} {:<10} {:>10} {:>10} {:>10}".format(
             str(time_str)[:20], status, source, total, success, failed
         ))
@@ -461,6 +462,8 @@ def build_parser():
         description=_("SkyCLI - S3 object storage management tool"),
         formatter_class=argparse.RawDescriptionHelpFormatter
     )
+
+    parser.add_argument("--version", action="version", version="skycli {version}".format(version=get_version()))
 
     subparsers = parser.add_subparsers(dest="command", title=_("Commands"))
 
