@@ -633,6 +633,16 @@ skycli sync run \
 
 ## 📜 更新日志 (Changelog)
 
+### 🆕 v0.4.6 (2026-04-13)
+
+**Dry-run 功能修复**
+
+- 修复 `--dry-run` 参数未生效的问题
+- 报告新增"预览模式 (dry-run)"标识
+- 修复 progress_callback 参数签名不匹配问题
+- 修复 validate 命令参数错误
+- 修复 object copy 命令实现
+
 ### 🆕 v0.4.5 (2026-04-13)
 
 **签名版本配置支持**

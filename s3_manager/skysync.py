@@ -81,6 +81,7 @@ class SyncTask:
     preserve_acl: bool = False
     exclude_patterns: List[str] = field(default_factory=list)
     include_patterns: List[str] = field(default_factory=list)
+    dry_run: bool = False
     
     # ===== 运行时状态 (Runtime State) =====
     status: SyncStatus = field(default=SyncStatus.PENDING, init=False)
@@ -391,6 +392,18 @@ class SyncTask:
 
     def _migrate_object(self, obj: Dict, metadata_cache: Optional[Dict[str, Dict]] = None) -> SyncResult:
         size = obj.get("Size", 0)
+        source_key = obj["Key"]
+        target_key = self.target_prefix + source_key[len(self.source_prefix):] if self.source_prefix else self.target_prefix + source_key
+
+        if self.dry_run:
+            return SyncResult(
+                success=True,
+                key=source_key,
+                target_key=target_key,
+                skipped=False,
+                reason="[DRY-RUN] Would upload",
+                size=size
+            )
 
         if size > LARGE_FILE_THRESHOLD:
             result = self._migrate_large_object(obj, metadata_cache)
@@ -416,6 +429,9 @@ class SyncTask:
 
         for target_key, target_obj in target_objects.items():
             if target_key not in source_keys:
+                if self.dry_run:
+                    self.deleted += 1
+                    continue
                 try:
                     self.target_client.delete_object(self.target_bucket, target_key)
                     self.deleted += 1
@@ -534,6 +550,7 @@ class SyncTask:
             "target_prefix": self.target_prefix,
             "preserve_metadata": self.preserve_metadata,
             "preserve_acl": self.preserve_acl,
+            "dry_run": self.dry_run,
             "total_objects": self.total_objects,
             "processed_objects": self.processed_objects,
             "uploaded": self.uploaded,
@@ -572,7 +589,8 @@ def create_sync(
     preserve_acl: bool = False,
     exclude_patterns: Optional[List[str]] = None,
     include_patterns: Optional[List[str]] = None,
-    profile: Optional[str] = None
+    profile: Optional[str] = None,
+    dry_run: bool = False
 ) -> SyncTask:
     source_config = config.get_profile(source_config_name, profile)
     target_config = config.get_profile(target_config_name, profile)
@@ -633,7 +651,8 @@ def create_sync(
         preserve_metadata=preserve_metadata,
         preserve_acl=preserve_acl,
         exclude_patterns=exclude_patterns,
-        include_patterns=include_patterns
+        include_patterns=include_patterns,
+        dry_run=dry_run
     )
 
 

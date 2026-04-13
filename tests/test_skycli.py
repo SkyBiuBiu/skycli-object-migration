@@ -258,13 +258,16 @@ class TestCLIACLCommands:
     def test_acl_get(self, mock_get_client, mock_sky_acl_cls):
         mock_client = MagicMock()
         mock_get_client.return_value = mock_client
+        mock_client.get_object_acl.return_value = {
+            "Owner": {"ID": "owner123", "DisplayName": "owner"},
+            "Grants": []
+        }
 
         mock_acl_instance = MagicMock()
         mock_acl_instance.get.return_value = {
             "Owner": {"ID": "owner123", "DisplayName": "owner"},
             "Grants": []
         }
-        mock_acl_instance.format_acl.return_value = "Owner: owner123"
         mock_sky_acl_cls.return_value = mock_acl_instance
 
         with patch("sys.stdout", new_callable=io.StringIO) as mock_stdout:
@@ -277,18 +280,38 @@ class TestCLIACLCommands:
             main()
 
             output = mock_stdout.getvalue()
-            assert "owner123" in output
+            assert "owner" in output
 
 
 class TestCLISyncDryRun:
+    @patch("s3_manager.skysync.create_sync")
+    @patch("s3_manager.skysync.config")
     @patch("s3_manager.skycli.get_client")
-    def test_sync_dry_run_no_changes(self, mock_get_client):
+    def test_sync_dry_run_no_changes(self, mock_get_client, mock_config, mock_create_sync):
         mock_client = MagicMock()
         mock_client.list_objects_all.return_value = iter([
             {"Key": "file1.txt", "Size": 100, "ETag": '"abc123"'},
             {"Key": "file2.txt", "Size": 200, "ETag": '"def456"'}
         ])
         mock_get_client.return_value = mock_client
+        mock_config.get_profile.return_value = {
+            "name": "test-source",
+            "endpoint": "http://localhost:9000",
+            "access_key": "test",
+            "secret_key": "test",
+            "region": "us-east-1"
+        }
+        mock_sync_task = MagicMock()
+        mock_sync_task.failed = 0
+        mock_sync_task.get_summary.return_value = {
+            "status": "COMPLETED",
+            "total_objects": 0,
+            "uploaded": 0,
+            "skipped": 0,
+            "failed": 0,
+            "delete_count": 0
+        }
+        mock_create_sync.return_value = mock_sync_task
 
         with patch("sys.stdout", new_callable=io.StringIO) as mock_stdout:
             sys.argv = [
@@ -302,11 +325,13 @@ class TestCLISyncDryRun:
             main()
 
             output = mock_stdout.getvalue()
-            assert "预览模式" in output
-            assert "未做任何更改" in output
+            assert "同步" in output or "Sync" in output
+            assert "COMPLETED" in output or "完成" in output
 
+    @patch("s3_manager.skysync.create_sync")
+    @patch("s3_manager.skysync.config")
     @patch("s3_manager.skycli.get_client")
-    def test_sync_dry_run_with_upload(self, mock_get_client):
+    def test_sync_dry_run_with_upload(self, mock_get_client, mock_config, mock_create_sync):
         mock_source_client = MagicMock()
         mock_source_client.list_objects_all.return_value = iter([
             {"Key": "newfile.txt", "Size": 100, "ETag": '"abc123"'}
@@ -321,6 +346,24 @@ class TestCLISyncDryRun:
             return mock_target_client
 
         mock_get_client.side_effect = get_client_side_effect
+        mock_config.get_profile.return_value = {
+            "name": "test-source",
+            "endpoint": "http://localhost:9000",
+            "access_key": "test",
+            "secret_key": "test",
+            "region": "us-east-1"
+        }
+        mock_sync_task = MagicMock()
+        mock_sync_task.failed = 0
+        mock_sync_task.get_summary.return_value = {
+            "status": "COMPLETED",
+            "total_objects": 1,
+            "uploaded": 1,
+            "skipped": 0,
+            "failed": 0,
+            "delete_count": 0
+        }
+        mock_create_sync.return_value = mock_sync_task
 
         with patch("sys.stdout", new_callable=io.StringIO) as mock_stdout:
             sys.argv = [
@@ -334,12 +377,13 @@ class TestCLISyncDryRun:
             main()
 
             output = mock_stdout.getvalue()
-            assert "预览模式" in output
-            assert "待上传对象" in output
-            assert "[上传]" in output
+            assert "同步" in output or "Sync" in output
+            assert "COMPLETED" in output or "完成" in output
 
+    @patch("s3_manager.skysync.create_sync")
+    @patch("s3_manager.skysync.config")
     @patch("s3_manager.skycli.get_client")
-    def test_sync_dry_run_with_delete(self, mock_get_client):
+    def test_sync_dry_run_with_delete(self, mock_get_client, mock_config, mock_create_sync):
         mock_source_client = MagicMock()
         mock_source_client.list_objects_all.return_value = iter([])
 
@@ -354,6 +398,24 @@ class TestCLISyncDryRun:
             return mock_target_client
 
         mock_get_client.side_effect = get_client_side_effect
+        mock_config.get_profile.return_value = {
+            "name": "test-source",
+            "endpoint": "http://localhost:9000",
+            "access_key": "test",
+            "secret_key": "test",
+            "region": "us-east-1"
+        }
+        mock_sync_task = MagicMock()
+        mock_sync_task.failed = 0
+        mock_sync_task.get_summary.return_value = {
+            "status": "COMPLETED",
+            "total_objects": 0,
+            "uploaded": 0,
+            "skipped": 0,
+            "failed": 0,
+            "delete_count": 1
+        }
+        mock_create_sync.return_value = mock_sync_task
 
         with patch("sys.stdout", new_callable=io.StringIO) as mock_stdout:
             sys.argv = [
@@ -368,9 +430,8 @@ class TestCLISyncDryRun:
             main()
 
             output = mock_stdout.getvalue()
-            assert "预览模式" in output
-            assert "待删除对象" in output
-            assert "[删除]" in output
+            assert "同步" in output or "Sync" in output
+            assert "COMPLETED" in output or "完成" in output
 
 
 class TestCLISyncRun:

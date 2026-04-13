@@ -24,30 +24,32 @@ class SkyClient:
         self.use_path_style = use_path_style
         self.verify_ssl = verify_ssl
         self.signature_version = signature_version
+        self._addressing_style = "path" if use_path_style else "virtual"
 
         self._client = self._create_client()
         self._resource = self._create_resource()
 
-    def _create_client(self):
-        """Create and configure boto3 S3 client.
-
-        Returns:
-            boto3.client: Configured S3 client with:
-                - Signature version: s3v4
-                - Addressing style: path or virtual (based on use_path_style)
-                - Retry mode: standard with 3 max attempts
-                - Connect timeout: 5 seconds
-                - Read timeout: 10 seconds
-        """
-        config = Config(
+    def _create_client_config(self, addressing_style: str = None) -> Config:
+        """创建 boto3 Config 对象"""
+        style = addressing_style or self._addressing_style
+        return Config(
             region_name=self.region,
             signature_version=self.signature_version,
-            s3={"addressing_style": "path" if self.use_path_style else "virtual"},
+            s3={"addressing_style": style},
             retries={"max_attempts": 3, "mode": "standard"},
             connect_timeout=5,
             read_timeout=10
         )
 
+    def _create_client(self, addressing_style: str = None):
+        """Create and configure boto3 S3 client.
+
+        Args:
+            addressing_style: 可选，覆盖默认的 addressing_style
+        Returns:
+            boto3.client: Configured S3 client
+        """
+        config = self._create_client_config(addressing_style)
         return boto3.client(
             "s3",
             endpoint_url=self.endpoint,
@@ -58,24 +60,15 @@ class SkyClient:
             verify=self.verify_ssl
         )
 
-    def _create_resource(self):
+    def _create_resource(self, addressing_style: str = None):
         """Create and configure boto3 S3 resource.
 
+        Args:
+            addressing_style: 可选，覆盖默认的 addressing_style
         Returns:
-            boto3.resource: Configured S3 resource with:
-                - Signature version: configurable
-                - Addressing style: path or virtual (based on use_path_style)
-                - Connect timeout: 5 seconds
-                - Read timeout: 10 seconds
+            boto3.resource: Configured S3 resource
         """
-        config = Config(
-            region_name=self.region,
-            signature_version=self.signature_version,
-            s3={"addressing_style": "path" if self.use_path_style else "auto"},
-            connect_timeout=5,
-            read_timeout=10
-        )
-
+        config = self._create_client_config(addressing_style)
         return boto3.resource(
             "s3",
             endpoint_url=self.endpoint,
@@ -86,8 +79,39 @@ class SkyClient:
             verify=self.verify_ssl
         )
 
+    def _auto_detect_addressing_style(self) -> str:
+        """自动检测合适的 addressing style
+
+        尝试 virtual style，如果遇到 PathStyleDomainForbidden，
+        则自动切换到 path style
+
+        Returns:
+            str: 合适的 addressing style ("virtual" 或 "path")
+        """
+        if self.use_path_style:
+            return "path"
+
+        try:
+            response = self._client.list_buckets()
+            _ = [b["Name"] for b in response.get("Buckets", [])]
+            return "virtual"
+        except botocore.exceptions.ClientError as e:
+            error_code = e.response.get("Error", {}).get("Code", "")
+            if error_code in ("PathStyleDomainForbidden", "PermanentRedirect"):
+                return "path"
+            raise
+        except Exception:
+            return "virtual"
+
     def test_connection(self) -> Dict:
         try:
+            if self._addressing_style == "virtual" and not self.use_path_style:
+                detected_style = self._auto_detect_addressing_style()
+                if detected_style != self._addressing_style:
+                    self._addressing_style = detected_style
+                    self._client = self._create_client()
+                    self._resource = self._create_resource()
+
             response = self._client.list_buckets()
             buckets = [b["Name"] for b in response.get("Buckets", [])]
             return {
@@ -96,19 +120,25 @@ class SkyClient:
                 "buckets": buckets[:10]
             }
         except botocore.exceptions.ClientError as e:
+            error_code = e.response.get("Error", {}).get("Code", "")
+            error_message = e.response.get("Error", {}).get("Message", str(e))
+
+            if error_code in ("PathStyleDomainForbidden", "PermanentRedirect"):
+                if self._addressing_style != "path":
+                    self._addressing_style = "path"
+                    self._client = self._create_client()
+                    self._resource = self._create_resource()
+                    return self.test_connection()
+
             return {
                 "success": False,
-                "error": str(e)
-            }
-        except botocore.exceptions.EndpointConnectionError as e:
-            return {
-                "success": False,
-                "error": f"Connection failed: {str(e)}"
+                "error_code": error_code,
+                "error": f"[{error_code}] {error_message}"
             }
         except Exception as e:
             return {
                 "success": False,
-                "error": f"Unexpected error: {str(e)}"
+                "error": str(e)
             }
 
     def list_buckets(self) -> List[Dict]:

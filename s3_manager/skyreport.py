@@ -106,6 +106,8 @@ class ReportGenerator:
         lines.append("选项:")
         lines.append(f"  保留元数据:    {'是' if summary.get('preserve_metadata', False) else '否'}")
         lines.append(f"  保留ACL:      {'是' if summary.get('preserve_acl', False) else '否'}")
+        if summary.get("dry_run", False):
+            lines.append("  模式:         预览模式 (dry-run)")
         lines.append("")
 
         lines.append("统计:")
