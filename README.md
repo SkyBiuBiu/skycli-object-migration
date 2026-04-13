@@ -633,6 +633,17 @@ skycli sync run \
 
 ## 📜 更新日志 (Changelog)
 
+### 🆕 v0.4.3 (2026-04-13)
+
+**代码清理**
+
+- 删除无用的临时测试文件 (test_direct.py, test_debug.py, test_startup.py)
+
+**版本管理优化**
+
+- 使用 update_version.py 脚本进行标准化版本更新
+- 自动更新 _version.py 和 Changelog
+
 ### 🆕 v0.4.2 (2026-04-13)
 
 **覆盖率测试**
