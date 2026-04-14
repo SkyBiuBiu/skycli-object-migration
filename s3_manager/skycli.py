@@ -3,6 +3,15 @@ import sys
 import os
 from typing import Optional, List, Dict
 
+
+class SmartFormatter(argparse.RawDescriptionHelpFormatter):
+    def __init__(self, *args, **kwargs):
+        import shutil
+        width = shutil.get_terminal_size().columns
+        kwargs.setdefault('width', min(width, 120))
+        super().__init__(*args, **kwargs)
+
+
 from .skyconfig import SkyConfig
 from .skyclient import SkyClient
 from ._version import get_version
@@ -460,7 +469,7 @@ def cmd_acl_get(args):
 def build_parser():
     parser = argparse.ArgumentParser(
         description=_("SkyCLI - S3 object storage management tool"),
-        formatter_class=argparse.RawDescriptionHelpFormatter
+        formatter_class=SmartFormatter
     )
 
     parser.add_argument("--version", action="version", version="skycli {version}".format(version=get_version()))

@@ -144,7 +144,7 @@ def main():
     print("1. 检查 README.md 的 Changelog 是否需要补充更新内容")
     print("2. 提交更改: git add s3_manager/_version.py README.md pyproject.toml")
     print("3. 提交并打标签：git commit -m 'Release v{new_version}'")
-    print(f"4. 创建 Git 标签：git tag v{new_version}")
+    print(f"4. 创建 Git 标签：git tag v{new_version} -m 'Release v{new_version}'")
 
 
 if __name__ == "__main__":
