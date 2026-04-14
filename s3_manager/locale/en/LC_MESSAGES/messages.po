@@ -429,6 +429,15 @@ msgstr "Grant full control"
 msgid "Copy ACL"
 msgstr "Copy ACL"
 
+msgid "Skip ACL comparison"
+msgstr "Skip ACL comparison"
+
+msgid "Skip content comparison"
+msgstr "Skip content comparison"
+
+msgid "Skip metadata comparison"
+msgstr "Skip metadata comparison"
+
 msgid "Sync/Migration operations"
 msgstr "Sync/Migration operations"
 
@@ -446,6 +455,9 @@ msgstr "Sync since (ISO format)"
 
 msgid "Sync since last sync"
 msgstr "Sync since last sync"
+
+msgid "Sync since datetime (ISO format)"
+msgstr "Sync since datetime (ISO format)"
 
 msgid "Delete objects not in source (sync mode)"
 msgstr "Delete objects not in source (sync mode)"
@@ -500,3 +512,21 @@ msgstr "Validation ID"
 
 msgid "List validation reports"
 msgstr "List validation reports"
+
+msgid "Profile name"
+msgstr "Profile name"
+
+msgid "Show config details"
+msgstr "Show config details"
+
+msgid "Get object info"
+msgstr "Get object info"
+
+msgid "Run sync"
+msgstr "Run sync"
+
+msgid "Sync history"
+msgstr "Sync history"
+
+msgid "Number of records"
+msgstr "Number of records"

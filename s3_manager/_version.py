@@ -2,7 +2,7 @@
 SkyCLI version management module
 """
 
-__version__ = "0.4.9"
+__version__ = "0.4.10"
 
 
 def get_version():

@@ -185,6 +185,15 @@ msgstr "[删除] {key}"
 msgid "[SKIP] {key}"
 msgstr "[跳过] {key}"
 
+msgid "Skip ACL comparison"
+msgstr "跳过 ACL 检查"
+
+msgid "Skip content comparison"
+msgstr "跳过内容比较"
+
+msgid "Skip metadata comparison"
+msgstr "跳过元数据检查"
+
 msgid "... and {count} more"
 msgstr "... 还有 {count} 个"
 
@@ -431,8 +440,8 @@ msgstr "源前缀"
 msgid "Target prefix"
 msgstr "目标前缀"
 
-msgid "Sync since (ISO format)"
-msgstr "同步自 (ISO 格式)"
+msgid "Sync since datetime (ISO format)"
+msgstr "同步起始时间 (ISO 格式)"
 
 msgid "Sync since last sync"
 msgstr "自上次同步后同步"
@@ -490,3 +499,21 @@ msgstr "校验 ID"
 
 msgid "List validation reports"
 msgstr "列出校验报告"
+
+msgid "Profile name"
+msgstr "配置文件名称"
+
+msgid "Show config details"
+msgstr "显示配置详情"
+
+msgid "Get object info"
+msgstr "获取对象信息"
+
+msgid "Run sync"
+msgstr "运行同步"
+
+msgid "Sync history"
+msgstr "同步历史"
+
+msgid "Number of records"
+msgstr "记录数量"

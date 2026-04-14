@@ -577,7 +577,7 @@ def build_parser():
     acl_get.add_argument("--profile", help=_("Profile name"))
     acl_get.set_defaults(func=cmd_acl_get)
 
-    sync_parser = subparsers.add_parser("sync", help=_("Sync operations"))
+    sync_parser = subparsers.add_parser("sync", help=_("Sync/Migration operations"))
     sync_subparsers = sync_parser.add_subparsers(dest="sync_command")
 
     s_run = sync_subparsers.add_parser("run", help=_("Run sync"))
@@ -608,7 +608,7 @@ def build_parser():
     s_history.add_argument("--limit", type=int, default=20, help=_("Number of records"))
     s_history.set_defaults(func=cmd_sync_history)
 
-    validate_parser = subparsers.add_parser("validate", help=_("Validate operations"))
+    validate_parser = subparsers.add_parser("validate", help=_("Validation operations"))
     validate_subparsers = validate_parser.add_subparsers(dest="validate_command")
 
     v_run = validate_subparsers.add_parser("run", help=_("Run validation"))
