@@ -1,6 +1,8 @@
 import boto3
 import botocore
 import os
+import warnings
+import urllib3
 from botocore.config import Config
 from typing import Dict, List, Optional, Any, Iterator, Callable
 from datetime import datetime
@@ -17,6 +19,8 @@ class SkyClient:
         verify_ssl: bool = True,
         signature_version: str = "s3v4"
     ):
+        if not verify_ssl:
+            urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
         self.endpoint = endpoint
         self.access_key = access_key
         self.secret_key = secret_key

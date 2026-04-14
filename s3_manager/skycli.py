@@ -369,8 +369,8 @@ def cmd_validate_run(args):
         target_bucket=args.target_bucket,
         prefix=args.source_prefix or "",
         check_content=not args.skip_content,
-        check_metadata=args.check_metadata,
-        check_acl=args.check_acl,
+        check_metadata=not args.no_check_metadata,
+        check_acl=not args.no_check_acl,
         profile=args.profile
     )
 
@@ -619,8 +619,8 @@ def build_parser():
     v_run.add_argument("--target-bucket", required=True, help=_("Target bucket"))
     v_run.add_argument("--target-prefix", help=_("Target prefix"))
     v_run.add_argument("--skip-content", action="store_true", help=_("Skip content comparison"))
-    v_run.add_argument("--check-metadata", action="store_true", help=_("Check metadata"))
-    v_run.add_argument("--check-acl", action="store_true", help=_("Check ACL"))
+    v_run.add_argument("--no-check-metadata", action="store_true", help=_("Skip metadata comparison"))
+    v_run.add_argument("--no-check-acl", action="store_true", help=_("Skip ACL comparison"))
     v_run.add_argument("--profile", help=_("Profile name"))
     v_run.add_argument("--output", choices=["json", "table"], default="table")
     v_run.add_argument("--quiet", action="store_true", help=_("Quiet mode"))

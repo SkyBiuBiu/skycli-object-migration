@@ -158,12 +158,18 @@ class ReportGenerator:
         lines.append(f"    失败:     {summary.get('content_failed', 0):,}")
         lines.append("")
         lines.append("  元数据检查:")
-        lines.append(f"    通过:     {summary.get('metadata_passed', 0):,}")
-        lines.append(f"    失败:     {summary.get('metadata_failed', 0):,}")
+        if report.get('check_metadata', True):
+            lines.append(f"    通过:     {summary.get('metadata_passed', 0):,}")
+            lines.append(f"    失败:     {summary.get('metadata_failed', 0):,}")
+        else:
+            lines.append(f"    跳过:     {summary.get('metadata_skipped', 0):,}")
         lines.append("")
         lines.append("  ACL检查:")
-        lines.append(f"    通过:     {summary.get('acl_passed', 0):,}")
-        lines.append(f"    失败:     {summary.get('acl_failed', 0):,}")
+        if report.get('check_acl', True):
+            lines.append(f"    通过:     {summary.get('acl_passed', 0):,}")
+            lines.append(f"    失败:     {summary.get('acl_failed', 0):,}")
+        else:
+            lines.append(f"    跳过:     {summary.get('acl_skipped', 0):,}")
 
         if report.get("failed_objects"):
             lines.append("")

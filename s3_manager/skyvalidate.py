@@ -42,6 +42,7 @@ class ValidationTask:
         self.start_time = None
         self.end_time = None
         self.total_objects = 0
+        self.processed_count = 0
         self.content_passed = 0
         self.metadata_passed = 0
         self.acl_passed = 0
@@ -184,6 +185,7 @@ class ValidationTask:
 
             for future in as_completed(futures):
                 result = future.result()
+                self.processed_count += 1
 
                 if result.get("content_ok", False):
                     self.content_passed += 1
@@ -199,7 +201,7 @@ class ValidationTask:
                 if progress_callback:
                     progress_callback({
                         "total": self.total_objects,
-                        "processed": self.content_passed + self.metadata_passed + self.acl_passed,
+                        "processed": self.processed_count,
                         "failed": self.failed
                     })
 
@@ -231,14 +233,19 @@ class ValidationTask:
             "source_bucket": self.source_bucket,
             "target_bucket": self.target_bucket,
             "prefix": self.prefix,
+            "check_content": self.check_content,
+            "check_metadata": self.check_metadata,
+            "check_acl": self.check_acl,
             "summary": {
                 "total_objects": self.total_objects,
                 "content_passed": self.content_passed,
                 "content_failed": self.total_objects - self.content_passed,
-                "metadata_passed": self.metadata_passed,
-                "metadata_failed": self.total_objects - self.metadata_passed,
-                "acl_passed": self.acl_passed,
-                "acl_failed": self.total_objects - self.acl_passed
+                "metadata_passed": self.metadata_passed if self.check_metadata else 0,
+                "metadata_failed": self.total_objects - self.metadata_passed if self.check_metadata else 0,
+                "metadata_skipped": self.total_objects if not self.check_metadata else 0,
+                "acl_passed": self.acl_passed if self.check_acl else 0,
+                "acl_failed": self.total_objects - self.acl_passed if self.check_acl else 0,
+                "acl_skipped": self.total_objects if not self.check_acl else 0
             },
             "duration_seconds": duration,
             "start_time": self.start_time.isoformat() if self.start_time else None,
