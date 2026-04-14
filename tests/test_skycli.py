@@ -161,6 +161,60 @@ class TestCLIConfigCommands:
 
             mock_config.rm_profile.assert_called_once_with("test-config", None)
 
+    @patch("s3_manager.skycli.config")
+    def test_config_show(self, mock_config):
+        mock_config.get_profile.return_value = {
+            "name": "test-config",
+            "endpoint": "http://localhost:9000",
+            "access_key": "testkey",
+            "secret_key": "secretkey",
+            "region": "us-east-1",
+            "use_path_style": True,
+            "verify_ssl": True,
+            "signature_version": "s3v4"
+        }
+
+        with patch("s3_manager.skycli.config", mock_config):
+            with patch("sys.stdout", new_callable=io.StringIO) as mock_stdout:
+                sys.argv = ["skycli", "config", "show", "--name", "test-config"]
+                main()
+
+                output = mock_stdout.getvalue()
+                assert "test-config" in output
+                assert "localhost:9000" in output
+
+
+class TestCLIBucketCommands:
+    @patch("s3_manager.skycli.get_client")
+    def test_bucket_create(self, mock_get_client):
+        mock_client = MagicMock()
+        mock_client.create_bucket.return_value = True
+        mock_get_client.return_value = mock_client
+
+        with patch("sys.stdout", new_callable=io.StringIO) as mock_stdout:
+            sys.argv = ["skycli", "bucket", "create", "test", "new-bucket"]
+            main()
+
+            mock_client.create_bucket.assert_called()
+            output = mock_stdout.getvalue()
+            assert "new-bucket" in output
+
+    @patch("s3_manager.skycli.get_client")
+    def test_bucket_list(self, mock_get_client):
+        mock_client = MagicMock()
+        mock_client.list_buckets.return_value = [
+            {"Name": "bucket1", "CreationDate": "2024-01-01T00:00:00Z"},
+            {"Name": "bucket2", "CreationDate": "2024-01-02T00:00:00Z"}
+        ]
+        mock_get_client.return_value = mock_client
+
+        with patch("sys.stdout", new_callable=io.StringIO) as mock_stdout:
+            sys.argv = ["skycli", "ls", "test"]
+            main()
+
+            output = mock_stdout.getvalue()
+            assert "bucket1" in output
+
 
 class TestCLIObjectCommands:
     @patch("s3_manager.skycli.get_client")
@@ -223,6 +277,30 @@ class TestCLIObjectCommands:
 
             output = mock_stdout.getvalue()
             assert "text/plain" in output
+
+    @patch("s3_manager.skycli.get_client")
+    def test_object_cp(self, mock_get_client):
+        mock_client = MagicMock()
+        mock_client.copy_object.return_value = {"ETag": "abc123"}
+        mock_client.head_object.return_value = {"Metadata": {"project": "test"}}
+
+        mock_get_client.return_value = mock_client
+
+        with patch("sys.stdout", new_callable=io.StringIO) as mock_stdout:
+            sys.argv = [
+                "skycli", "object", "cp",
+                "--source", "test",
+                "--source-bucket", "src-bucket",
+                "--source-key", "source.txt",
+                "--target", "test",
+                "--target-bucket", "dst-bucket",
+                "--target-key", "dest.txt"
+            ]
+            main()
+
+            mock_client.copy_object.assert_called_once()
+            output = mock_stdout.getvalue()
+            assert "OK" in output or "success" in output.lower()
 
 
 class TestCLIMetadataCommands:
@@ -474,6 +552,28 @@ class TestCLISyncRun:
         # 验证 create_sync 被调用
         assert mock_create_sync is not None
         assert mock_get_client is not None
+
+    def test_sync_history(self):
+        with patch("s3_manager.skysync.get_sync_history") as mock_get_history:
+            mock_get_history.return_value = [
+                {
+                    "sync_id": "sync-20240101-12345678",
+                    "status": "completed",
+                    "source_bucket": "src-bucket",
+                    "target_bucket": "dst-bucket",
+                    "total_objects": 100,
+                    "uploaded": 95,
+                    "failed": 5,
+                    "start_time": "2024-01-01T12:00:00"
+                }
+            ]
+
+            with patch("sys.stdout", new_callable=io.StringIO) as mock_stdout:
+                sys.argv = ["skycli", "sync", "history"]
+                main()
+
+                output = mock_stdout.getvalue()
+                assert "src-bucket" in output
 
 
 class TestCLIValidateCommands:

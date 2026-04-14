@@ -243,18 +243,18 @@ def cmd_object_cp(args):
     target_client = get_client(args.target, args.profile)
 
     try:
-        target_key = args.target_key or args.key or args.source_key
+        target_key = args.target_key or args.source_key
 
         result = target_client.copy_object(
-            source_bucket=args.bucket,
-            source_key=args.key,
+            source_bucket=args.source_bucket,
+            source_key=args.source_key,
             target_bucket=args.target_bucket,
             target_key=target_key,
-            storage_class=args.storage_class or "STANDARD"
+            storage_class="STANDARD"
         )
 
         if args.preserve_metadata:
-            source_info = client.head_object(args.bucket, args.key)
+            source_info = client.head_object(args.source_bucket, args.source_key)
             metadata = source_info.get("Metadata", {})
             if metadata:
                 target_client.put_object(

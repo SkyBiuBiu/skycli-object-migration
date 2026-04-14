@@ -633,6 +633,17 @@ skycli sync run \
 
 ## 📜 更新日志 (Changelog)
 
+### 🆕 v0.4.7 (2026-04-13)
+
+**测试用例补充与CLI修复**
+
+- 新增 config show 命令测试
+- 新增 bucket create/list 命令测试
+- 新增 object cp 命令测试
+- 新增 sync history 命令测试
+- 修复 cmd_object_cp 参数名错误 (bucket/key → source_bucket/source_key)
+- 新增 --version CLI 参数支持
+
 ### 🆕 v0.4.6 (2026-04-13)
 
 **Dry-run 功能修复**
