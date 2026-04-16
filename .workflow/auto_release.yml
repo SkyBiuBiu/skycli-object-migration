@@ -1,0 +1,29 @@
+version: '1.0'
+name: auto_release
+displayName: auto_release
+triggers:
+  trigger: auto
+  push:
+    tags:
+      prefix:
+        - ''
+stages:
+  - name: auto_release
+    displayName: auto_release
+    strategy: naturally
+    trigger: auto
+    executor: []
+    steps:
+      - step: release@gitee
+        name: release_gitee
+        displayName: Gitee Release
+        releaseName: null
+        description: ${TAG_NAME}
+        tagName: ${TAG_NAME}
+        upstreamArtifact: []
+        assertFiles: null
+        prerelease: false
+        allowUpdate: true
+        notify: []
+        strategy:
+          retry: '0'
