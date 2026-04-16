@@ -18,8 +18,8 @@ stages:
         name: release_gitee
         displayName: Gitee Release
         releaseName: null
-        description: ${TAG_NAME}
-        tagName: ${TAG_NAME}
+        description: test
+        tagName: test
         upstreamArtifact: []
         assertFiles: null
         prerelease: false
